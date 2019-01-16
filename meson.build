@@ -21,6 +21,8 @@ lib = library(
     [
         'src/detail/frame.cpp',
         'src/detail/queue.cpp',
+        'src/detail/socket.cpp',
+        'src/detail/socket_set.cpp',
         'src/stack.cpp',
     ],
     dependencies : [boost],
@@ -34,7 +36,9 @@ if gtest.found() and gmock.found()
         [
             'test/main.cpp',
             'test/detail/frame.cpp',
+            'test/detail/list.cpp',
             'test/detail/queue.cpp',
+            'test/detail/socket.cpp',
             'test/stack.cpp',
         ],
         dependencies : [gtest, gmock],
