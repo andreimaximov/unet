@@ -6,6 +6,7 @@ project(
     version : '0.0.1',
 )
 
+boost = dependency('boost', required : true)
 gtest = dependency('gtest', required : false)
 gmock = dependency('gmock', required : false)
 benchmark = dependency('benchmark', required : false)
@@ -18,8 +19,11 @@ install_subdir('include/unet', install_dir : get_option('includedir'))
 lib = library(
     'unet',
     [
+        'src/detail/frame.cpp',
+        'src/detail/queue.cpp',
         'src/stack.cpp',
     ],
+    dependencies : [boost],
     include_directories : incdirs,
     install : true,
 )
@@ -29,6 +33,8 @@ if gtest.found() and gmock.found()
         'unet-test',
         [
             'test/main.cpp',
+            'test/detail/frame.cpp',
+            'test/detail/queue.cpp',
             'test/stack.cpp',
         ],
         dependencies : [gtest, gmock],

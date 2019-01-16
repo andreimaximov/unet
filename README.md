@@ -4,6 +4,7 @@
 
 ## Dependencies
 
+- [boost](https://www.boost.org/) - Required
 - [googletest](https://github.com/google/googletest) - Optional
 - [benchmark](https://github.com/google/benchmark) - Optional
 
