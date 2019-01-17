@@ -21,6 +21,7 @@ The following special targets are provided:
 - **install:** Installs the library and headers on your system
 - **test:** Runs unit tests, don't forget to `meson configure -Db_sanitize=address`
 - **benchmark:** Runs benchmarks, don't forget to `meson configure -Dbuildtype=release`
+- **smoke:** Runs [smoke](scripts/smoke.py) tests
 - **format:** Runs `clang-format` on the source
 
 A dev VM w/a build environment is provided. Just `vagrant up && vagrant ssh`.

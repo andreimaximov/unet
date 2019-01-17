@@ -23,6 +23,8 @@ lib = library(
         'src/detail/queue.cpp',
         'src/detail/socket.cpp',
         'src/detail/socket_set.cpp',
+        'src/dev/tap.cpp',
+        'src/exception.cpp',
         'src/stack.cpp',
     ],
     dependencies : [boost],
@@ -64,4 +66,20 @@ if benchmark.found()
     benchmark('bench', bench)
 endif
 
+example_defs = {
+    'tap' : 'examples/tap.cpp',
+}
+
+example_exes = []
+
+foreach name, cpp : example_defs
+    example_exes += executable(
+        name,
+        [cpp],
+        include_directories : incdirs,
+        link_with : lib,
+    )
+endforeach
+
+run_target('smoke', command : ['scripts/smoke.py', '-v'], depends : example_exes)
 run_target('format', command : 'scripts/clang-format.sh')

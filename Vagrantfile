@@ -44,9 +44,13 @@ Vagrant.configure("2") do |config|
         make install
 
     echo "cd /workspace" >> /home/vagrant/.bashrc
+    echo "/workspace/scripts/tap.sh" >> /home/vagrant/.bashrc
   SHELL
+  config.vm.network "private_network", ip: "10.255.255.101"
   config.vm.provider "virtualbox" do |vb|
     vb.cpus = "4"
     vb.memory = "4096"
+    vb.customize ["modifyvm", :id, "--nicpromisc1", "allow-all"]
+    vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
   end
 end
