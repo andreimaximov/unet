@@ -23,6 +23,8 @@ The following special targets are provided:
 - **benchmark:** Runs benchmarks, don't forget to `meson configure -Dbuildtype=release`
 - **format:** Runs `clang-format` on the source
 
+A dev VM w/a build environment is provided. Just `vagrant up && vagrant ssh`.
+
 ## Resources
 
 - [Stanford's CS 144 MOOC](https://lagunita.stanford.edu/courses/Engineering/Networking-SP/SelfPaced/courseware)
