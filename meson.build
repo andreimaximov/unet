@@ -56,6 +56,7 @@ if benchmark.found()
         'unet-bench',
         [
             'bench/main.cpp',
+            'bench/detail/socket.cpp',
             'bench/stack.cpp',
         ],
         dependencies : [benchmark, threads],
