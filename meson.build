@@ -27,6 +27,7 @@ lib = library(
         'src/dev/tap.cpp',
         'src/event.cpp',
         'src/exception.cpp',
+        'src/raw_socket.cpp',
         'src/stack.cpp',
     ],
     dependencies : [boost],
@@ -45,7 +46,6 @@ if gtest.found() and gmock.found()
             'test/detail/raw_socket.cpp',
             'test/detail/socket.cpp',
             'test/event.cpp',
-            'test/stack.cpp',
         ],
         dependencies : [gtest, gmock],
         include_directories : incdirs,
@@ -61,7 +61,6 @@ if benchmark.found()
         [
             'bench/main.cpp',
             'bench/detail/socket.cpp',
-            'bench/stack.cpp',
         ],
         dependencies : [benchmark, threads],
         include_directories : incdirs,
@@ -72,7 +71,8 @@ if benchmark.found()
 endif
 
 example_defs = {
-    'tap' : 'examples/tap.cpp',
+    'arping' : 'examples/arping.cpp',
+    'tap'    : 'examples/tap.cpp',
 }
 
 example_exes = []

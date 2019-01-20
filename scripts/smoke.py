@@ -33,6 +33,9 @@ class SmokeTest(unittest.TestCase):
     def testTap(self):
         runAndCheck(pathToExample('tap'))
 
+    def testArping(self):
+        runAndCheck(pathToExample('arping'))
+
 
 if __name__ == '__main__':
     unittest.main()
