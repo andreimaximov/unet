@@ -32,8 +32,13 @@ void Stack::stopLoop() {
   runningLoop_ = false;
 }
 
+std::unique_ptr<Timer> Stack::createTimer(std::function<void()> f) {
+  return std::make_unique<Timer>(timerManager_, f);
+}
+
 void Stack::runLoopOnce() {
   readLoop();
+  timerManager_.run();
   socketSet_.dispatch();
   socketSet_.drainRoundRobin(sendQueue_);
   sendLoop();
