@@ -27,6 +27,10 @@ The following special targets are provided:
 
 A dev VM w/a build environment is provided. Just `vagrant up && vagrant ssh`.
 
+## Tests
+
+The included [unit tests](test) will run on Linux, macOS, etc. The included [smoke tests](scripts/smoke.py) **will only run successfully on a Linux system** because they rely on a TAP interface. The provided Linux VM has a TAP interface setup for these tests.
+
 ## Resources
 
 - [Stanford's CS 144 MOOC](https://lagunita.stanford.edu/courses/Engineering/Networking-SP/SelfPaced/courseware)
