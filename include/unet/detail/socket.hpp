@@ -40,6 +40,10 @@ class Socket {
   // mutate this or any other socket in any way.
   virtual void onFramePopped() {}
 
+  bool hasCapacity();
+
+  bool hasQueuedFrames();
+
   void sendFrame(std::unique_ptr<Frame>& f);
 
   std::unique_ptr<Frame> popFrame();

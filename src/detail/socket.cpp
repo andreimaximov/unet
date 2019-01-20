@@ -17,6 +17,14 @@ Socket::Socket(SocketSet& socketSet, std::size_t sendQueueLen,
   socketSet_.sockets_.push_back(ownerHook_);
 }
 
+bool Socket::hasCapacity() {
+  return sendQueue_.hasCapacity();
+}
+
+bool Socket::hasQueuedFrames() {
+  return !!sendQueue_.peek();
+}
+
 void Socket::sendFrame(std::unique_ptr<Frame>& f) {
   if (!f) {
     return;

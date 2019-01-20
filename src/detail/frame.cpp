@@ -14,6 +14,12 @@ std::unique_ptr<Frame> Frame::make(std::size_t dataLen) {
   return std::unique_ptr<Frame>{new Frame{dataLen}};
 }
 
+std::unique_ptr<Frame> Frame::make(const Frame& f) {
+  auto copy = make(f.dataLen);
+  std::copy(f.data, f.data + f.dataLen, copy->data);
+  return copy;
+}
+
 std::unique_ptr<Frame> Frame::makeStr(boost::string_view data) {
   auto f = make(data.size());
   std::copy(data.begin(), data.end(), f->data);

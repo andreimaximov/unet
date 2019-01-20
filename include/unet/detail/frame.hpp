@@ -19,6 +19,9 @@ class Frame : public NonMovable {
   // Return a frame w/the specified data length. The data is NOT initialized.
   static std::unique_ptr<Frame> make(std::size_t dataLen);
 
+  // Return a frame w/the copied contents of frame f.
+  static std::unique_ptr<Frame> make(const Frame& f);
+
   // Return a frame w/the specified data.
   static std::unique_ptr<Frame> makeStr(boost::string_view data);
 
