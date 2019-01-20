@@ -11,6 +11,8 @@
 #include <unet/dev/dev.hpp>
 #include <unet/options.hpp>
 #include <unet/timer.hpp>
+#include <unet/wire/ethernet.hpp>
+#include <unet/wire/ipv4.hpp>
 
 namespace unet {
 
@@ -18,8 +20,10 @@ namespace unet {
 // packets, etc.
 class Stack : public detail::NonMovable {
  public:
-  // Creates a network stack powered by the provided device.
-  Stack(std::unique_ptr<Dev> dev, Options opts = Options{});
+  // Creates a network stack powered by the provided device. The stack is
+  // assigned the specified Ethernet and IPv4 addresses.
+  Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr, Ipv4Addr ipv4Addr,
+        Options opts = Options{});
 
   // Run the network stack until stopLoop(...) is called or an error occurs.
   void runLoop();
@@ -31,6 +35,12 @@ class Stack : public detail::NonMovable {
   // Return a timer which will run f upon expiration.
   std::unique_ptr<Timer> createTimer(std::function<void()> f);
 
+  // Return the Ethernet address assigned to the stack.
+  EthernetAddr getHwAddr() const;
+
+  // Return the IPv4 address assigned to the stack.
+  Ipv4Addr getIpv4Addr() const;
+
  private:
   void runLoopOnce();
 
@@ -39,6 +49,8 @@ class Stack : public detail::NonMovable {
   void readLoop();
 
   std::unique_ptr<Dev> dev_;
+  EthernetAddr ethAddr_;
+  Ipv4Addr ipv4Addr_;
   Options opts_;
   detail::SocketSet socketSet_;
   detail::Queue sendQueue_;

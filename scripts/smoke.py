@@ -5,6 +5,11 @@ import subprocess
 import time
 import unittest
 
+DEV_ETH = '06:11:22:33:44:55'
+DEV_IP = '10.255.255.102'
+GATEWAY_IP = '10.255.255.101'
+UNKNOWN_IP = '10.255.255.103'
+
 
 def pathToExample(name):
     build = os.getenv('MESON_BUILD_ROOT', os.getcwd())
@@ -33,8 +38,23 @@ class SmokeTest(unittest.TestCase):
     def testTap(self):
         runAndCheck(pathToExample('tap'))
 
-    def testArping(self):
-        runAndCheck(pathToExample('arping'))
+    def testArpingGateway(self):
+        stdout = runAndCheck(
+            [pathToExample('arping'), '--addr', GATEWAY_IP, '--count', '4'])
+        self.assertRegex(
+            stdout,
+            ('28 bytes from \S{17} \(10.255.255.101\) index=1 time=\d+ ms\n'
+             '28 bytes from \S{17} \(10.255.255.101\) index=2 time=\d+ ms\n'
+             '28 bytes from \S{17} \(10.255.255.101\) index=3 time=\d+ ms\n'
+             '28 bytes from \S{17} \(10.255.255.101\) index=4 time=\d+ ms\n'))
+
+    def testArpingUnknown(self):
+        stdout = runAndCheck(
+            [pathToExample('arping'), '--addr', UNKNOWN_IP, '--count', '4'])
+        self.assertEqual(stdout, ('Timeout\n'
+                                  'Timeout\n'
+                                  'Timeout\n'
+                                  'Timeout\n'))
 
 
 if __name__ == '__main__':

@@ -6,8 +6,13 @@
 
 namespace unet {
 
-Stack::Stack(std::unique_ptr<Dev> dev, Options opts)
-    : dev_{std::move(dev)}, opts_{opts}, sendQueue_{opts.stackSendQueueLen} {
+Stack::Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr, Ipv4Addr ipv4Addr,
+             Options opts)
+    : dev_{std::move(dev)},
+      ethAddr_{ethAddr},
+      ipv4Addr_{ipv4Addr},
+      opts_{opts},
+      sendQueue_{opts.stackSendQueueLen} {
   if (!dev_) {
     throw Exception{"Invalid dev."};
   }
@@ -34,6 +39,14 @@ void Stack::stopLoop() {
 
 std::unique_ptr<Timer> Stack::createTimer(std::function<void()> f) {
   return std::make_unique<Timer>(timerManager_, f);
+}
+
+EthernetAddr Stack::getHwAddr() const {
+  return ethAddr_;
+}
+
+Ipv4Addr Stack::getIpv4Addr() const {
+  return ipv4Addr_;
 }
 
 void Stack::runLoopOnce() {

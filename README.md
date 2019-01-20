@@ -5,6 +5,7 @@
 ## Dependencies
 
 - [boost](https://www.boost.org/) - Required
+- [gflags](https://github.com/gflags/gflags) - Optional
 - [googletest](https://github.com/google/googletest) - Optional
 - [benchmark](https://github.com/google/benchmark) - Optional
 

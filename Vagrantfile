@@ -15,6 +15,7 @@ Vagrant.configure("2") do |config|
         clang-format                                       \
         cmake                                              \
         libboost-all-dev                                   \
+        libgflags-dev                                      \
         ninja-build                                        \
         python3                                            \
         python3-pip                                        \

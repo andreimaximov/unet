@@ -7,6 +7,7 @@ project(
 )
 
 boost = dependency('boost', required : true)
+gflags = dependency('gflags', required : false)
 gtest = dependency('gtest', required : false)
 gmock = dependency('gmock', required : false)
 benchmark = dependency('benchmark', required : false)
@@ -85,14 +86,17 @@ example_defs = {
 
 example_exes = []
 
-foreach name, cpp : example_defs
-    example_exes += executable(
-        name,
-        [cpp],
-        include_directories : incdirs,
-        link_with : lib,
-    )
-endforeach
+if gflags.found()
+    foreach name, cpp : example_defs
+        example_exes += executable(
+            name,
+            [cpp],
+            dependencies : [boost, gflags],
+            include_directories : incdirs,
+            link_with : lib,
+        )
+    endforeach
+endif
 
 run_target('smoke', command : ['scripts/smoke.py', '-v'], depends : example_exes)
 run_target('format', command : 'scripts/clang-format.sh')
