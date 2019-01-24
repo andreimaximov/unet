@@ -71,6 +71,7 @@ if benchmark.found()
         'unet-bench',
         [
             'bench/main.cpp',
+            'bench/detail/arp_cache.cpp',
             'bench/detail/socket.cpp',
         ],
         dependencies : [benchmark, threads],
