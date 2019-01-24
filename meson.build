@@ -20,6 +20,7 @@ install_subdir('include/unet', install_dir : get_option('includedir'))
 lib = library(
     'unet',
     [
+        'src/detail/arp_cache.cpp',
         'src/detail/frame.cpp',
         'src/detail/queue.cpp',
         'src/detail/raw_socket.cpp',
@@ -44,6 +45,7 @@ if gtest.found() and gmock.found()
         'unet-test',
         [
             'test/main.cpp',
+            'test/detail/arp_cache.cpp',
             'test/detail/frame.cpp',
             'test/detail/list.cpp',
             'test/detail/queue.cpp',

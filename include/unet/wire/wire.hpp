@@ -1,8 +1,11 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 
 #include <boost/endian/conversion.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace unet {
 
@@ -38,5 +41,14 @@ template <typename T, typename = typename T::MemcmpTag>
 bool operator!=(const T& lhs, const T& rhs) {
   return !(lhs == rhs);
 }
+
+// A hash based on the the memory layout of T.
+template <typename T>
+struct Memhash {
+  std::size_t operator()(const T& x) const {
+    auto p = reinterpret_cast<const std::uint8_t*>(&x);
+    return boost::hash_range(p, p + sizeof(T));
+  }
+};
 
 }  // namespace unet
