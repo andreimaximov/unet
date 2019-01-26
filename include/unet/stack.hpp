@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 
+#include <unet/detail/arp_queue.hpp>
 #include <unet/detail/list.hpp>
 #include <unet/detail/nonmovable.hpp>
 #include <unet/detail/queue.hpp>
@@ -23,7 +24,8 @@ class Stack : public detail::NonMovable {
   // Creates a network stack powered by the provided device. The stack is
   // assigned the specified Ethernet and IPv4 addresses.
   Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr,
-        Ipv4AddrCidr ipv4AddrCidr, Options opts = Options{});
+        Ipv4AddrCidr ipv4AddrCidr, Ipv4Addr defaultGateway,
+        Options opts = Options{});
 
   // Run the network stack until stopLoop(...) is called or an error occurs.
   void runLoop();
@@ -48,14 +50,18 @@ class Stack : public detail::NonMovable {
 
   void readLoop();
 
+  bool sendIpv4(detail::Frame& f);
+
   std::unique_ptr<Dev> dev_;
   EthernetAddr ethAddr_;
   Ipv4AddrCidr ipv4AddrCidr_;
+  Ipv4Addr defaultGateway_;
   Options opts_;
   detail::SocketSet socketSet_;
-  detail::Queue sendQueue_;
+  std::shared_ptr<detail::Queue> sendQueue_;
   detail::List<detail::RawSocket> ethernetSockets_;
-  TimerManager timerManager_;
+  std::shared_ptr<TimerManager> timerManager_;
+  detail::ArpQueue arpQueue_;
   bool runningLoop_ = false;
 
   friend class RawSocket;

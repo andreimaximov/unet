@@ -77,6 +77,13 @@ TEST(TimerTest, RunAfterMultipleWithSameDelay) {
   manager.run(kTpNow + std::chrono::seconds{1});
 }
 
+TEST(TimerTest, Now) {
+  TimerManager manager{kTpNow};
+  ASSERT_EQ(manager.now(), kTpNow);
+  manager.run(kTpNow + std::chrono::seconds{1});
+  ASSERT_EQ(manager.now(), kTpNow + std::chrono::seconds{1});
+}
+
 TEST(TimerTest, DropTimer) {
   TimerManager manager{kTpNow};
 

@@ -72,6 +72,9 @@ class TimerManager : public detail::NonMovable {
   void run(std::chrono::steady_clock::time_point now =
                std::chrono::steady_clock::now());
 
+  // Return the last now timestamp passed to the update tick.
+  std::chrono::steady_clock::time_point now() const;
+
  private:
   // TODO(amaximov): Consider using a Hashed Hierarchial Timing Wheel design:
   // http://www.cs.columbia.edu/~nahum/w6998/papers/sosp87-timing-wheels.pdf

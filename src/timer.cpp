@@ -45,4 +45,8 @@ void TimerManager::run(std::chrono::steady_clock::time_point now) {
   }
 }
 
+std::chrono::steady_clock::time_point TimerManager::now() const {
+  return now_;
+}
+
 }  // namespace unet

@@ -17,6 +17,8 @@ struct UNET_PACK Ipv4Addr {
 
 UNET_ASSERT_SIZE(Ipv4Addr, 4);
 
+constexpr Ipv4Addr kLoopback{{127, 0, 0, 1}};
+
 std::ostream& operator<<(std::ostream& os, Ipv4Addr ipv4Addr);
 
 // Return a parsed IPv4 address from a string. Throws an Exception in case of an

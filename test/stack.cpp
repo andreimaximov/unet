@@ -18,7 +18,7 @@ class MockDev : public Dev {
 
 TEST(StackTest, StopLoop) {
   Stack stack(std::make_unique<NiceMock<MockDev>>(), EthernetAddr{},
-              Ipv4AddrCidr{Ipv4Addr{}, 32});
+              Ipv4AddrCidr{Ipv4Addr{}, 32}, Ipv4Addr{});
 
   MockFunction<void()> f;
   auto timer = stack.createTimer(f.AsStdFunction());

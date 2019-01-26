@@ -21,6 +21,7 @@ lib = library(
     'unet',
     [
         'src/detail/arp_cache.cpp',
+        'src/detail/arp_queue.cpp',
         'src/detail/check.cpp',
         'src/detail/frame.cpp',
         'src/detail/queue.cpp',
@@ -47,6 +48,7 @@ if gtest.found() and gmock.found()
         [
             'test/main.cpp',
             'test/detail/arp_cache.cpp',
+            'test/detail/arp_queue.cpp',
             'test/detail/check.cpp',
             'test/detail/frame.cpp',
             'test/detail/list.cpp',
