@@ -21,6 +21,7 @@ lib = library(
     'unet',
     [
         'src/detail/arp_cache.cpp',
+        'src/detail/check.cpp',
         'src/detail/frame.cpp',
         'src/detail/queue.cpp',
         'src/detail/raw_socket.cpp',
@@ -46,6 +47,7 @@ if gtest.found() and gmock.found()
         [
             'test/main.cpp',
             'test/detail/arp_cache.cpp',
+            'test/detail/check.cpp',
             'test/detail/frame.cpp',
             'test/detail/list.cpp',
             'test/detail/queue.cpp',
@@ -72,6 +74,7 @@ if benchmark.found()
         [
             'bench/main.cpp',
             'bench/detail/arp_cache.cpp',
+            'bench/detail/check.cpp',
             'bench/detail/socket.cpp',
         ],
         dependencies : [benchmark, threads],

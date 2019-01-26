@@ -37,4 +37,39 @@ class Ipv4AddrCidr {
   std::uint32_t mask_ = 0;
 };
 
+struct UNET_PACK Ipv4Header {
+// Careful with order of members on compilers for targets w/different endianess.
+#ifdef BOOST_LITTLE_ENDIAN
+  std::uint8_t ihl : 4;
+  std::uint8_t version : 4;
+  std::uint8_t ecn : 2;
+  std::uint8_t dscp : 6;
+#elif BOOST_BIG_ENDIAN
+  std::uint8_t version : 4;
+  std::uint8_t ihl : 4;
+  std::uint8_t dscp : 6;
+  std::uint8_t ecn : 2;
+#endif
+  std::uint16_t len;
+  std::uint16_t id;
+  std::uint16_t flagsOffset;
+  std::uint8_t ttl;
+  std::uint8_t proto;
+  std::uint16_t checksum;
+  Ipv4Addr srcAddr;
+  Ipv4Addr dstAddr;
+  std::uint8_t options[];
+};
+
+UNET_ASSERT_SIZE(Ipv4Header, 20);
+
+// Return an IPv4 header checksum.
+std::uint16_t checksumIpv4(const Ipv4Header* header);
+
+// [IPv4
+// protocols](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
+namespace ipv4_proto {
+static const std::uint8_t kIcmp = 1;
+}  // namespace ipv4_proto
+
 }  // namespace unet

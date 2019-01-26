@@ -8,6 +8,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <unet/detail/check.hpp>
 #include <unet/exception.hpp>
 
 namespace unet {
@@ -69,6 +70,11 @@ bool Ipv4AddrCidr::isInSubnet(Ipv4Addr addr) const {
   };
 
   return (addrAsInt(addr_) & mask_) == (addrAsInt(addr) & mask_);
+}
+
+std::uint16_t checksumIpv4(const Ipv4Header* header) {
+  return detail::checksum(reinterpret_cast<const std::uint8_t*>(header),
+                          sizeof(Ipv4Header));
 }
 
 }  // namespace unet
