@@ -14,7 +14,7 @@
 using namespace unet;
 
 static const EthernetAddr kHwAddr{{0x06, 0x11, 0x22, 0x33, 0x44, 0x55}};
-static const Ipv4Addr kIpv4Addr{10, 255, 255, 102};
+static const Ipv4AddrCidr kIpv4AddrCidr{Ipv4Addr{10, 255, 255, 102}, 24};
 
 static bool validateIpv4Addr(const char* flagname, const std::string& raw) {
   try {
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   (void)validateIpv4Addr;
   stack = std::make_unique<Stack>(std::make_unique<Tap>("tap0"), kHwAddr,
-                                  kIpv4Addr);
+                                  kIpv4AddrCidr);
   runApp();
   return 0;
 }

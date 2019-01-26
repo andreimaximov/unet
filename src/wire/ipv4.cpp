@@ -1,7 +1,9 @@
 #include <unet/wire/ipv4.hpp>
 
+#include <cstring>
 #include <regex>
 
+#include <boost/assert.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -48,6 +50,25 @@ Ipv4Addr parseIpv4(boost::string_view rawIpv4Addr) {
   }
 
   return addr;
+}
+
+Ipv4AddrCidr::Ipv4AddrCidr(Ipv4Addr addr, std::size_t maskLen) : addr_{addr} {
+  BOOST_ASSERT(maskLen <= 32);
+  mask_ = hostToNet((~mask_) << (32 - maskLen));
+}
+
+Ipv4Addr Ipv4AddrCidr::operator*() const {
+  return addr_;
+}
+
+bool Ipv4AddrCidr::isInSubnet(Ipv4Addr addr) const {
+  auto addrAsInt = [](Ipv4Addr addr) {
+    std::uint32_t raw;
+    std::memcpy(&raw, addr.addr, 4);
+    return raw;
+  };
+
+  return (addrAsInt(addr_) & mask_) == (addrAsInt(addr) & mask_);
 }
 
 }  // namespace unet

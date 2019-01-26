@@ -22,8 +22,8 @@ class Stack : public detail::NonMovable {
  public:
   // Creates a network stack powered by the provided device. The stack is
   // assigned the specified Ethernet and IPv4 addresses.
-  Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr, Ipv4Addr ipv4Addr,
-        Options opts = Options{});
+  Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr,
+        Ipv4AddrCidr ipv4AddrCidr, Options opts = Options{});
 
   // Run the network stack until stopLoop(...) is called or an error occurs.
   void runLoop();
@@ -50,7 +50,7 @@ class Stack : public detail::NonMovable {
 
   std::unique_ptr<Dev> dev_;
   EthernetAddr ethAddr_;
-  Ipv4Addr ipv4Addr_;
+  Ipv4AddrCidr ipv4AddrCidr_;
   Options opts_;
   detail::SocketSet socketSet_;
   detail::Queue sendQueue_;

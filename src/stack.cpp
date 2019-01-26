@@ -6,11 +6,11 @@
 
 namespace unet {
 
-Stack::Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr, Ipv4Addr ipv4Addr,
-             Options opts)
+Stack::Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr,
+             Ipv4AddrCidr ipv4AddrCidr, Options opts)
     : dev_{std::move(dev)},
       ethAddr_{ethAddr},
-      ipv4Addr_{ipv4Addr},
+      ipv4AddrCidr_{ipv4AddrCidr},
       opts_{opts},
       sendQueue_{opts.stackSendQueueLen} {
   if (!dev_) {
@@ -46,7 +46,7 @@ EthernetAddr Stack::getHwAddr() const {
 }
 
 Ipv4Addr Stack::getIpv4Addr() const {
-  return ipv4Addr_;
+  return *ipv4AddrCidr_;
 }
 
 void Stack::runLoopOnce() {
