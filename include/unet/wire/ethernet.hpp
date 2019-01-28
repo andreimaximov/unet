@@ -27,7 +27,7 @@ UNET_ASSERT_SIZE(EthernetHeader, 14);
 
 constexpr EthernetAddr kEthernetBcastAddr{{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
 
-/// [EtherType](https://en.wikipedia.org/wiki/EtherType) constants.
+// EtherType constants: https://en.wikipedia.org/wiki/EtherType
 namespace eth_type {
 static const std::uint16_t kArp = hostToNet<std::uint16_t>(0x0806);
 }  // namespace eth_type

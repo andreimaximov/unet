@@ -68,8 +68,8 @@ UNET_ASSERT_SIZE(Ipv4Header, 20);
 // Return an IPv4 header checksum.
 std::uint16_t checksumIpv4(const Ipv4Header* header);
 
-// [IPv4
-// protocols](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
+// IPv4 protocols:
+// https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 namespace ipv4_proto {
 static const std::uint8_t kIcmp = 1;
 }  // namespace ipv4_proto
