@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import contextlib
 import os
 import subprocess
 import time
@@ -29,6 +30,23 @@ def runAndCheck(command):
             timeout=10).stdout, 'ascii')
 
 
+@contextlib.contextmanager
+def runNetworkStack():
+    process = subprocess.Popen(pathToExample('stack'))
+    time.sleep(1)
+    err = None
+    if process.poll() is not None:
+        raise RuntimeError('Network stack could not be started!')
+    try:
+        yield
+    except Exception as ex:
+        err = ex
+    process.kill()
+    process.wait()
+    if err is not None:
+        raise err
+
+
 class SmokeTest(unittest.TestCase):
     '''High level smoke tests for the network stack.
 
@@ -37,6 +55,12 @@ class SmokeTest(unittest.TestCase):
 
     def testTap(self):
         runAndCheck(pathToExample('tap'))
+
+    def testArpingReply(self):
+        with runNetworkStack():
+            stdout = runAndCheck(
+                ['sudo', 'arping', DEV_IP, '-i', 'br0', '-c', '1'])
+            self.assertIn(DEV_ETH, stdout)
 
     def testArpingGateway(self):
         stdout = runAndCheck(

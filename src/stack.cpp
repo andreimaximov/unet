@@ -3,6 +3,7 @@
 #include <boost/scope_exit.hpp>
 
 #include <unet/exception.hpp>
+#include <unet/wire/arp.hpp>
 
 namespace unet {
 
@@ -26,7 +27,7 @@ Stack::Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr,
 
 void Stack::runLoop() {
   if (runningLoop_) {
-    throw Exception{"runLoopOnce(...) is already running."};
+    throw Exception{"runLoop(...) is already running."};
   };
 
   runningLoop_ = true;
@@ -86,12 +87,79 @@ void Stack::readLoop() {
   auto frameLen = dev_->maxTransmissionUnit();
   auto f = detail::Frame::make(frameLen);
   while ((f->dataLen = dev_->read(f->data, frameLen)) > 0) {
-    // This loop is safe because RawSocket::process(...) is guaranteed to not
-    // destroy the socket.
-    for (detail::Hook<detail::RawSocket>& hook : ethernetSockets_) {
-      hook->process(*f);
-    }
+    f->net = nullptr;
+    f->netLen = 0;
+    process(*f);
   }
+}
+
+void Stack::process(detail::Frame& f) {
+  if (f.dataLen < sizeof(EthernetHeader)) {
+    return;
+  }
+
+  f.net = f.data + sizeof(EthernetHeader);
+  f.netLen = f.dataLen - sizeof(EthernetHeader);
+
+  // This loop is safe because RawSocket::process(...) is guaranteed to not
+  // destroy the socket.
+  for (detail::Hook<detail::RawSocket>& hook : ethernetSockets_) {
+    hook->process(f);
+  }
+
+  if (f.dataAs<EthernetHeader>()->ethType == eth_type::kArp) {
+    processArp(f);
+  }
+}
+
+void Stack::processArp(detail::Frame& f) {
+  if (f.netLen < sizeof(ArpHeader)) {
+    return;
+  }
+
+  auto eth = f.dataAs<EthernetHeader>();
+  auto arp = f.netAs<ArpHeader>();
+
+  if (arp->hwType != arp_hw_addr::kEth ||
+      arp->protoType != arp_proto_addr::kIpv4 || arp->hwLen != 6 ||
+      arp->protoLen != 4 || arp->srcHwAddr != eth->srcAddr ||
+      arp->dstProtoAddr != *ipv4AddrCidr_) {
+    return;
+  } else if (arp->op == arp_op::kRequest) {
+    sendArp(arp->srcProtoAddr, arp->srcHwAddr, arp_op::kReply);
+  } else if (arp->op == arp_op::kReply) {
+    arpQueue_.add(arp->srcProtoAddr, arp->srcHwAddr);
+  }
+}
+
+void Stack::sendArp(Ipv4Addr dstIpv4Addr, EthernetAddr dstHwAddr,
+                    std::uint16_t arpOp) {
+  if (!sendQueue_->hasCapacity()) {
+    return;
+  }
+
+  auto f = detail::Frame::make(sizeof(EthernetHeader) + sizeof(ArpHeader));
+
+  auto eth = f->dataAs<EthernetHeader>();
+  eth->srcAddr = ethAddr_;
+  eth->dstAddr = dstHwAddr;
+  eth->ethType = eth_type::kArp;
+
+  f->net = f->data + sizeof(EthernetHeader);
+  f->netLen = f->dataLen - sizeof(EthernetHeader);
+
+  auto arp = f->netAs<ArpHeader>();
+  arp->hwType = arp_hw_addr::kEth;
+  arp->protoType = arp_proto_addr::kIpv4;
+  arp->hwLen = 6;
+  arp->protoLen = 4;
+  arp->op = arpOp;
+  arp->srcHwAddr = ethAddr_;
+  arp->srcProtoAddr = *ipv4AddrCidr_;
+  arp->dstHwAddr = dstHwAddr;
+  arp->dstProtoAddr = dstIpv4Addr;
+
+  sendQueue_->push(f);
 }
 
 bool Stack::sendIpv4(detail::Frame& f) {

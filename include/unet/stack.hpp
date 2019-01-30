@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 
 #include <unet/detail/arp_queue.hpp>
+#include <unet/detail/frame.hpp>
 #include <unet/detail/list.hpp>
 #include <unet/detail/nonmovable.hpp>
 #include <unet/detail/queue.hpp>
@@ -45,11 +47,12 @@ class Stack : public detail::NonMovable {
 
  private:
   void runLoopOnce();
-
   void sendLoop();
-
   void readLoop();
-
+  void process(detail::Frame& f);
+  void processArp(detail::Frame& f);
+  void sendArp(Ipv4Addr dstIpv4Addr, EthernetAddr dstHwAddr,
+               std::uint16_t arpOp);
   bool sendIpv4(detail::Frame& f);
 
   std::unique_ptr<Dev> dev_;
