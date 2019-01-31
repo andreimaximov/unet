@@ -53,6 +53,7 @@ class Stack : public detail::NonMovable {
   void processArp(detail::Frame& f);
   void sendArp(Ipv4Addr dstIpv4Addr, EthernetAddr dstHwAddr,
                std::uint16_t arpOp);
+  void processIpv4(detail::Frame& f);
   bool sendIpv4(detail::Frame& f);
 
   std::unique_ptr<Dev> dev_;
@@ -63,6 +64,7 @@ class Stack : public detail::NonMovable {
   detail::SocketSet socketSet_;
   std::shared_ptr<detail::Queue> sendQueue_;
   detail::List<detail::RawSocket> ethernetSockets_;
+  detail::List<detail::RawSocket> ipv4Sockets_;
   std::shared_ptr<TimerManager> timerManager_;
   detail::ArpQueue arpQueue_;
   bool runningLoop_ = false;

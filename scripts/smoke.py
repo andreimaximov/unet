@@ -10,6 +10,7 @@ DEV_ETH = '06:11:22:33:44:55'
 DEV_IP = '10.255.255.102'
 GATEWAY_IP = '10.255.255.101'
 UNKNOWN_IP = '10.255.255.103'
+GOOGLE_DNS_IP = '8.8.8.8'
 
 
 def pathToExample(name):
@@ -75,6 +76,44 @@ class SmokeTest(unittest.TestCase):
     def testArpingUnknown(self):
         stdout = runAndCheck(
             [pathToExample('arping'), '--addr', UNKNOWN_IP, '--count', '4'])
+        self.assertEqual(stdout, ('Timeout\n'
+                                  'Timeout\n'
+                                  'Timeout\n'
+                                  'Timeout\n'))
+
+    def testPingGateway(self):
+        stdout = runAndCheck(
+            [pathToExample('ping'), '--addr', GATEWAY_IP, '--count', '4'])
+        self.assertRegex(
+            stdout,
+            ('64 bytes from 10.255.255.101: icmp_seq=1 ttl=64 time=\d+ ms\n'
+             '64 bytes from 10.255.255.101: icmp_seq=2 ttl=64 time=\d+ ms\n'
+             '64 bytes from 10.255.255.101: icmp_seq=3 ttl=64 time=\d+ ms\n'
+             '64 bytes from 10.255.255.101: icmp_seq=4 ttl=64 time=\d+ ms\n'))
+
+    def testPingGoogleDNS(self):
+        stdout = runAndCheck(
+            [pathToExample('ping'), '--addr', GOOGLE_DNS_IP, '--count', '4'])
+        self.assertRegex(
+            stdout,
+            ('64 bytes from 8.8.8.8: icmp_seq=1 ttl=\d+ time=\d+ ms\n'
+             '64 bytes from 8.8.8.8: icmp_seq=2 ttl=\d+ time=\d+ ms\n'
+             '64 bytes from 8.8.8.8: icmp_seq=3 ttl=\d+ time=\d+ ms\n'
+             '64 bytes from 8.8.8.8: icmp_seq=4 ttl=\d+ time=\d+ ms\n'))
+
+    def testPingUnknown(self):
+        stdout = runAndCheck(
+            [pathToExample('ping'), '--addr', UNKNOWN_IP, '--count', '4'])
+        self.assertEqual(stdout, ('Timeout\n'
+                                  'Timeout\n'
+                                  'Timeout\n'
+                                  'Timeout\n'))
+
+    def testPingHugePayload(self):
+        stdout = runAndCheck([
+            pathToExample('ping'), '--addr', GOOGLE_DNS_IP, '--count', '4',
+            '--payload', '16384'
+        ])
         self.assertEqual(stdout, ('Timeout\n'
                                   'Timeout\n'
                                   'Timeout\n'

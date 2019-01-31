@@ -35,6 +35,7 @@ lib = library(
         'src/stack.cpp',
         'src/timer.cpp',
         'src/wire/ethernet.cpp',
+        'src/wire/icmpv4.cpp',
         'src/wire/ipv4.cpp',
     ],
     dependencies : [boost],

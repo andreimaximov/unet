@@ -101,14 +101,15 @@ void Stack::process(detail::Frame& f) {
   f.net = f.data + sizeof(EthernetHeader);
   f.netLen = f.dataLen - sizeof(EthernetHeader);
 
-  // This loop is safe because RawSocket::process(...) is guaranteed to not
-  // destroy the socket.
+  // Safe loop because process(...) is guaranteed to not destroy the socket.
   for (detail::Hook<detail::RawSocket>& hook : ethernetSockets_) {
     hook->process(f);
   }
 
   if (f.dataAs<EthernetHeader>()->ethType == eth_type::kArp) {
     processArp(f);
+  } else if (f.dataAs<EthernetHeader>()->ethType == eth_type::kIpv4) {
+    processIpv4(f);
   }
 }
 
@@ -129,6 +130,25 @@ void Stack::processArp(detail::Frame& f) {
     sendArp(arp->srcProtoAddr, arp->srcHwAddr, arp_op::kReply);
   } else if (arp->op == arp_op::kReply) {
     arpQueue_.add(arp->srcProtoAddr, arp->srcHwAddr);
+  }
+}
+
+void Stack::processIpv4(detail::Frame& f) {
+  if (f.netLen < sizeof(Ipv4Header)) {
+    return;
+  }
+
+  auto ipv4 = f.netAs<Ipv4Header>();
+  std::size_t headerLen = ipv4->ihl * 4;
+  if (headerLen > f.netLen || ipv4->version != 4 ||
+      netToHost(ipv4->len) != f.netLen || checksumIpv4(ipv4) != 0 ||
+      ipv4->dstAddr != *ipv4AddrCidr_) {
+    return;
+  }
+
+  // Safe loop because process(...) is guaranteed to not destroy the socket.
+  for (detail::Hook<detail::RawSocket>& hook : ipv4Sockets_) {
+    hook->process(f);
   }
 }
 
