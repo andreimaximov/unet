@@ -37,7 +37,11 @@ class ArpQueue : private NonMovable {
   // Delays transmission of an IPv4 frame until an Ethernet address for the next
   // hop IPv4 address is resolved. The frame might be dropped due to an ARP
   // timeout or queue capacity limitations.
-  void delay(std::unique_ptr<Frame> frame);
+  //
+  // Return true if the frame was delayed and there were no other frames with
+  // the same hop address in the queue. In practice this means an ARP request
+  // needs to be sent.
+  bool delay(std::unique_ptr<Frame> frame);
 
  private:
   void scheduleTimeout(Ipv4Addr hopAddr);

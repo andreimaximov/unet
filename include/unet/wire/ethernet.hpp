@@ -29,6 +29,7 @@ constexpr EthernetAddr kEthernetBcastAddr{{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
 
 // EtherType constants: https://en.wikipedia.org/wiki/EtherType
 namespace eth_type {
+static const std::uint16_t kIpv4 = hostToNet<std::uint16_t>(0x0800);
 static const std::uint16_t kArp = hostToNet<std::uint16_t>(0x0806);
 }  // namespace eth_type
 

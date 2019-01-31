@@ -61,17 +61,18 @@ boost::optional<EthernetAddr> ArpQueue::lookup(Ipv4Addr hopAddr) {
   return cache_.lookup(hopAddr);
 }
 
-void ArpQueue::delay(std::unique_ptr<Frame> frame) {
+bool ArpQueue::delay(std::unique_ptr<Frame> frame) {
   if (!frame || !delayQueue_.hasCapacity()) {
-    return;
+    return false;
   }
 
-  auto arpSent = (timers_.count(frame->hopAddr) == 1);
-  if (!arpSent) {
+  auto needTimer = (timers_.count(frame->hopAddr) == 0);
+  if (needTimer) {
     scheduleTimeout(frame->hopAddr);
   }
 
   delayQueue_.push(frame);
+  return needTimer;
 }
 
 void ArpQueue::scheduleTimeout(Ipv4Addr hopAddr) {

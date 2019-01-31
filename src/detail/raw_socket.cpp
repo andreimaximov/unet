@@ -3,17 +3,34 @@
 #include <algorithm>
 
 #include <unet/event.hpp>
+#include <unet/exception.hpp>
+#include <unet/wire/ethernet.hpp>
+#include <unet/wire/ipv4.hpp>
 
 namespace unet {
 namespace detail {
 
-RawSocket::RawSocket(std::size_t sendQueueLen, std::size_t readQueueLen,
-                     std::size_t maxTransmissionUnit, List<RawSocket>& sockets,
+RawSocket::RawSocket(std::uint32_t socketType, std::size_t sendQueueLen,
+                     std::size_t readQueueLen, std::size_t maxTransmissionUnit,
+                     EthernetAddr ethAddr, List<RawSocket>& sockets,
                      SocketSet& socketSet, Callback callback)
     : Socket{socketSet, sendQueueLen, callback},
+      socketType_{socketType},
       socketsHook_{this},
       readQueue_{readQueueLen},
-      maxTransmissionUnit_{maxTransmissionUnit} {
+      maxTransmissionUnit_{maxTransmissionUnit},
+      ethAddr_{ethAddr} {
+  if (socketType_ != kEthernet && socketType_ != kIpv4) {
+    throw Exception{"Unknown socket type."};
+  }
+
+  if ((socketType_ == kEthernet &&
+       maxTransmissionUnit_ < sizeof(EthernetHeader)) ||
+      (socketType_ == kIpv4 &&
+       maxTransmissionUnit_ < sizeof(EthernetHeader) + sizeof(Ipv4Header))) {
+    throw Exception{"MTU is too small for the specified layer."};
+  }
+
   sockets.push_back(socketsHook_);
   if (hasCapacity()) {
     pendingEventMaskAdd(eventAsInt(Event::Send));
@@ -30,7 +47,8 @@ void RawSocket::onFramePopped() {
 }
 
 void RawSocket::process(const Frame& f) {
-  if (closed_ || !readQueue_.hasCapacity()) {
+  if (closed_ || !readQueue_.hasCapacity() ||
+      (socketType_ == kIpv4 && !f.net)) {
     return;
   }
 
@@ -40,13 +58,33 @@ void RawSocket::process(const Frame& f) {
 }
 
 std::size_t RawSocket::send(const std::uint8_t* buf, std::size_t bufLen) {
-  if (!hasCapacity() || bufLen == 0) {
+  if (!hasCapacity() ||
+      (socketType_ == kEthernet && bufLen < sizeof(EthernetHeader)) ||
+      (socketType_ == kIpv4 && bufLen < sizeof(Ipv4Header))) {
     return 0;
   }
 
-  auto copyLen = std::min(maxTransmissionUnit_, bufLen);
-  auto f = Frame::make(copyLen);
-  std::copy(buf, buf + copyLen, f->data);
+  std::unique_ptr<Frame> f;
+  std::size_t copyLen = 0;
+
+  switch (socketType_) {
+    case kEthernet:
+      copyLen = std::min(maxTransmissionUnit_, bufLen);
+      f = Frame::make(copyLen);
+      std::copy(buf, buf + copyLen, f->data);
+      break;
+    case kIpv4:
+      copyLen = std::min(maxTransmissionUnit_ - sizeof(EthernetHeader), bufLen);
+      f = Frame::make(sizeof(EthernetHeader) + copyLen);
+      f->dataAs<EthernetHeader>()->srcAddr = ethAddr_;
+      f->dataAs<EthernetHeader>()->ethType = eth_type::kIpv4;
+      f->net = f->data + sizeof(EthernetHeader);
+      f->netLen = f->dataLen - sizeof(EthernetHeader);
+      f->doIpv4Routing = true;
+      std::copy(buf, buf + copyLen, f->net);
+      break;
+  }
+
   sendFrame(f);
 
   if (!hasCapacity()) {
@@ -62,8 +100,10 @@ std::size_t RawSocket::read(std::uint8_t* buf, std::size_t bufLen) {
     return 0;
   }
 
-  auto copyLen = std::min(bufLen, f->dataLen);
-  std::copy(f->data, f->data + copyLen, buf);
+  auto readBuf = (socketType_ == kEthernet) ? f->data : f->net;
+  auto readLen = (socketType_ == kEthernet) ? f->dataLen : f->netLen;
+  auto copyLen = std::min(bufLen, readLen);
+  std::copy(readBuf, readBuf + copyLen, buf);
 
   if (!readQueue_.peek()) {
     pendingEventMaskRemove(eventAsInt(Event::Read));

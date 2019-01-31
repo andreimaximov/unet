@@ -28,11 +28,11 @@ class ArpQueueTest : public Test {
                                           timerManager);
   }
 
-  Frame* Delay(Ipv4Addr hopAddr) {
+  Frame* Delay(Ipv4Addr hopAddr, bool shouldSendArp) {
     auto f = Frame::make(sizeof(EthernetHeader));
     f->hopAddr = hopAddr;
     auto p = f.get();
-    arpQueue->delay(std::move(f));
+    EXPECT_EQ(arpQueue->delay(std::move(f)), shouldSendArp);
 
     // This can be a dangling pointer if the frame is tail dropped.
     return p;
@@ -44,8 +44,8 @@ class ArpQueueTest : public Test {
 };
 
 TEST_F(ArpQueueTest, DelayAndAdd) {
-  auto f1 = Delay(kIpv4[0]);
-  auto f2 = Delay(kIpv4[0]);
+  auto f1 = Delay(kIpv4[0], true);
+  auto f2 = Delay(kIpv4[0], false);
   ASSERT_FALSE(sendQueue->pop());
 
   arpQueue->add(kIpv4[0], kEth[0]);
@@ -64,13 +64,13 @@ TEST_F(ArpQueueTest, DelayAndAdd) {
 }
 
 TEST_F(ArpQueueTest, DelayAndTimeout) {
-  Delay(kIpv4[0]);
-  Delay(kIpv4[0]);
+  Delay(kIpv4[0], true);
+  Delay(kIpv4[0], false);
   ASSERT_FALSE(sendQueue->pop());
 
   timerManager->run(kNowBase + std::chrono::seconds{2});
 
-  auto f1 = Delay(kIpv4[1]);
+  auto f1 = Delay(kIpv4[1], true);
   arpQueue->add(kIpv4[1], kEth[1]);
 
   auto f2 = sendQueue->pop();
@@ -80,11 +80,11 @@ TEST_F(ArpQueueTest, DelayAndTimeout) {
 }
 
 TEST_F(ArpQueueTest, DelayAndDrop) {
-  Delay(kIpv4[0]);
-  Delay(kIpv4[0]);
+  Delay(kIpv4[0], true);
+  Delay(kIpv4[0], false);
   sendQueue->pop();
 
-  Delay(kIpv4[1]);
+  Delay(kIpv4[1], false);
   ASSERT_FALSE(sendQueue->pop());
 }
 

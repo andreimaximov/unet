@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <boost/assert.hpp>
+
 namespace unet {
 namespace detail {
 
@@ -17,6 +19,11 @@ std::unique_ptr<Frame> Frame::make(std::size_t dataLen) {
 std::unique_ptr<Frame> Frame::make(const Frame& f) {
   auto copy = make(f.dataLen);
   std::copy(f.data, f.data + f.dataLen, copy->data);
+  if (f.net) {
+    BOOST_ASSERT(f.net >= f.data);
+    copy->net = copy->data + (f.net - f.data);
+    copy->netLen = f.netLen;
+  }
   return copy;
 }
 

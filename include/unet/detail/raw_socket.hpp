@@ -7,15 +7,20 @@
 #include <unet/detail/list.hpp>
 #include <unet/detail/queue.hpp>
 #include <unet/detail/socket.hpp>
+#include <unet/wire/ethernet.hpp>
 
 namespace unet {
 namespace detail {
 
-// A socket for communicating via raw Ethernet frames.
+// A socket for communicating via Ethernet or IPv4 frames.
 class RawSocket : public Socket {
  public:
-  RawSocket(std::size_t sendQueueLen, std::size_t readQueueLen,
-            std::size_t maxTransmissionUnit, List<RawSocket>& sockets,
+  static constexpr std::uint32_t kEthernet = 0;
+  static constexpr std::uint32_t kIpv4 = 1;
+
+  RawSocket(std::uint32_t socketType, std::size_t sendQueueLen,
+            std::size_t readQueueLen, std::size_t maxTransmissionUnit,
+            EthernetAddr ethAddr, List<RawSocket>& sockets,
             SocketSet& socketSet, Callback callback);
 
   ~RawSocket() override = default;
@@ -34,9 +39,11 @@ class RawSocket : public Socket {
   void close();
 
  private:
+  std::uint32_t socketType_;
   Hook<RawSocket> socketsHook_;
   Queue readQueue_;
   std::size_t maxTransmissionUnit_;
+  EthernetAddr ethAddr_;
   bool closed_ = false;
 };
 

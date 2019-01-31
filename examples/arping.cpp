@@ -86,7 +86,7 @@ static void callback(RawSocket& socket, std::uint32_t mask) {
 void runApp() {
   dstProtoAddr = parseIpv4(FLAGS_addr);
 
-  RawSocket socket{*stack, callback};
+  RawSocket socket{*stack, RawSocket::kEthernet, callback};
   socket.subscribe(Event::Send);
   socket.subscribe(Event::Read);
 

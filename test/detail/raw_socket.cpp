@@ -15,12 +15,14 @@ using testing::Test;
 
 using MockCallback = StrictMock<MockFunction<void(std::uint32_t)>>;
 
-static const boost::string_view kMessage = "Message...";
+static const boost::string_view kMessage = "Knock knock, who's there?";
 
 class RawSocketTest : public Test {
  public:
   void SetUp() override {
-    socket = new RawSocket{2, 2, 1500, sockets, ss, cb.AsStdFunction()};
+    socket =
+        new RawSocket{RawSocket::kEthernet, 2,       2,  1500,
+                      EthernetAddr{},       sockets, ss, cb.AsStdFunction()};
     socket->subscribedEventMaskAdd(Event::Send | Event::Read);
   }
 

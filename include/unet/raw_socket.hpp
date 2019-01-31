@@ -11,33 +11,44 @@
 
 namespace unet {
 
-// A socket for communicating via raw Ethernet frames. The socket supports
-// the following events:
+// A socket for communicating via Ethernet or IPv4 frames. The following events
+// are supported:
 //
 // - Send
 // - Read
 class RawSocket : public detail::NonMovable {
  public:
+  // The type of raw socket which determines the layer of sent and received
+  // frames.
+  enum class Type {
+    Ethernet,
+    Ipv4,
+  };
+
+  static constexpr auto kEthernet = Type::Ethernet;
+  static constexpr auto kIpv4 = Type::Ipv4;
+
   RawSocket() = delete;
 
   // Creates a raw socket bound to the provided stack. The socket MUST NOT
   // exceed the lifetime of the stack. The callback is invoked once a
   // subscribed event becomes pending.
-  RawSocket(Stack& stack,
+  RawSocket(Stack& stack, Type type,
             std::function<void(RawSocket&, std::uint32_t)> callback);
 
   ~RawSocket();
 
-  // Sends an Ethernet frame represented by buf.
+  // Sends a frame represented by buf.
   //
   // Return the number of bytes sent. Sending 0 bytes for a non-zero length buf
   // indicates the socket is exhausted. Sending > 0 but < bufLen bytes indicates
   // the frame was truncated to respect the maximum transmission unit of the
-  // underlying device.
+  // underlying device. The buf should be at least as long as the header of the
+  // specified layer.
   std::size_t send(const std::uint8_t* buf, std::size_t bufLen);
 
-  // Reads an Ethernet frame into buf. The buf should be at least as long as the
-  // maximum transmission unit of the underlying device to avoid truncation.
+  // Reads a frame into buf. The frame will be truncated if buf is not long
+  // enough.
   //
   // Return the number of bytes read into buf.
   std::size_t read(std::uint8_t* buf, std::size_t bufLen);

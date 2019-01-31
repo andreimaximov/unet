@@ -2,12 +2,15 @@
 
 namespace unet {
 
-RawSocket::RawSocket(Stack& stack,
+RawSocket::RawSocket(Stack& stack, Type type,
                      std::function<void(RawSocket&, std::uint32_t)> callback) {
   socket_ = new detail::RawSocket{
+      (type == kEthernet) ? detail::RawSocket::kEthernet
+                          : detail::RawSocket::kIpv4,
       stack.opts_.rawSocketSendQueueLen,
       stack.opts_.rawSocketReadQueueLen,
       stack.dev_->maxTransmissionUnit(),
+      stack.ethAddr_,
       stack.ethernetSockets_,
       stack.socketSet_,
       [this, callback](auto mask) { callback(*this, mask); }};

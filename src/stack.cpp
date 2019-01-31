@@ -67,11 +67,11 @@ void Stack::runLoopOnce() {
 void Stack::sendLoop() {
   while (auto f = sendQueue_->peek()) {
     if (f->doIpv4Routing && !sendIpv4(*f)) {
-      // Lookup of the Ethernet address for the next hop has failed. Send an
-      // ARP request for the hop and delay the frame in the meantime.
-      arpQueue_.delay(sendQueue_->pop());
-
-      // TODO(amaximov): Send ARP request.
+      // Lookup of the Ethernet address for the next hop has failed.
+      if (arpQueue_.delay(sendQueue_->pop())) {
+        // Send an ARP request for the hop and delay the frame in the meantime.
+        sendArp(f->hopAddr, kEthernetBcastAddr, arp_op::kRequest);
+      }
       continue;
     }
 

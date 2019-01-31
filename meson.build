@@ -89,6 +89,7 @@ endif
 
 example_defs = {
     'arping' : 'examples/arping.cpp',
+    'ping'   : 'examples/ping.cpp',
     'stack'  : 'examples/stack.cpp',
     'tap'    : 'examples/tap.cpp',
 }
