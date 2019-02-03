@@ -16,13 +16,13 @@ constexpr Ipv4Addr kIpv4[] = {Ipv4Addr{10, 255, 255, 1},
 constexpr EthernetAddr kEth[] = {
     EthernetAddr{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00},
     EthernetAddr{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x11}};
-constexpr std::chrono::steady_clock::time_point kNowBase{};
+constexpr std::chrono::steady_clock::time_point kTpNowBase{};
 
 class ArpQueueTest : public Test {
  public:
   void SetUp() override {
     sendQueue = std::make_shared<Queue>(2);
-    timerManager = std::make_shared<TimerManager>(kNowBase);
+    timerManager = std::make_shared<TimerManager>(kTpNowBase);
     arpQueue = std::make_shared<ArpQueue>(2, 2, std::chrono::seconds{1},
                                           std::chrono::seconds{60}, sendQueue,
                                           timerManager);
@@ -68,7 +68,7 @@ TEST_F(ArpQueueTest, DelayAndTimeout) {
   Delay(kIpv4[0], false);
   ASSERT_FALSE(sendQueue->pop());
 
-  timerManager->run(kNowBase + std::chrono::seconds{2});
+  timerManager->run(kTpNowBase + std::chrono::seconds{2});
 
   auto f1 = Delay(kIpv4[1], true);
   arpQueue->add(kIpv4[1], kEth[1]);
