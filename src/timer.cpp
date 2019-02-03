@@ -41,7 +41,12 @@ void TimerManager::run(std::chrono::steady_clock::time_point now) {
   auto core = cores_.begin();
   while (!cores_.empty() && (core = cores_.begin())->runAt < now) {
     core->unlink();
-    core->f();
+
+    // Hold a shared_ptr to the callback in case it destroys the timer. It is
+    // unclear whether destroying a std::function<...> during its own
+    // invocation can cause UB.
+    auto callback = core->callback;
+    (*callback)();
   }
 }
 

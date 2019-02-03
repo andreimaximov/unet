@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <functional>
+#include <memory>
 
 #include <boost/intrusive/set.hpp>
 
@@ -21,7 +22,8 @@ class Timer : public detail::NonMovable {
   // the timer. It is safe to schedule and/or cancel this or any other timers
   // from within f.
   template <typename F>
-  Timer(TimerManager& manager, F&& f) : core_{manager, std::forward<F>(f)} {}
+  Timer(TimerManager& manager, F&& callback)
+      : core_{manager, std::forward<F>(callback)} {}
 
   // Schedules the timer to expire after more than delay time has passed. If
   // already scheduled, it is first cancelled.
@@ -39,11 +41,13 @@ class Timer : public detail::NonMovable {
                    boost::intrusive::link_mode<boost::intrusive::auto_unlink>> {
    public:
     template <typename F>
-    Core(TimerManager& manager, F&& f)
-        : manager{manager}, f{std::forward<F>(f)} {}
+    Core(TimerManager& manager, F&& callback)
+        : manager{manager},
+          callback{std::make_shared<std::function<void()>>(
+              std::forward<F>(callback))} {}
 
     TimerManager& manager;
-    std::function<void()> f;
+    std::shared_ptr<std::function<void()>> callback;
     std::chrono::steady_clock::time_point runAt{};
 
     bool operator<(const Core& other) const;

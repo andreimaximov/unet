@@ -9,10 +9,10 @@ using testing::InSequence;
 using testing::Invoke;
 using testing::MockFunction;
 
-static const std::chrono::steady_clock::time_point kTpNow{};
+static const std::chrono::steady_clock::time_point kTpNowBase{};
 
 TEST(TimerTest, RunAfter) {
-  TimerManager manager{kTpNow};
+  TimerManager manager{kTpNowBase};
 
   MockFunction<void()> f;
   MockFunction<void()> g;
@@ -27,14 +27,14 @@ TEST(TimerTest, RunAfter) {
   Timer timer{manager, f.AsStdFunction()};
   timer.runAfter(std::chrono::seconds{1});
 
-  manager.run(kTpNow + std::chrono::seconds{1});
+  manager.run(kTpNowBase + std::chrono::seconds{1});
   g.Call();
-  manager.run(kTpNow + std::chrono::seconds{2});
+  manager.run(kTpNowBase + std::chrono::seconds{2});
   g.Call();
 }
 
 TEST(TimerTest, RunAfterInCallback) {
-  TimerManager manager{kTpNow};
+  TimerManager manager{kTpNowBase};
   Timer* p;
 
   MockFunction<void()> f;
@@ -54,13 +54,13 @@ TEST(TimerTest, RunAfterInCallback) {
   timer.runAfter(std::chrono::seconds{0});
   p = &timer;
 
-  manager.run(kTpNow + std::chrono::seconds{1});
+  manager.run(kTpNowBase + std::chrono::seconds{1});
   g.Call();
-  manager.run(kTpNow + std::chrono::seconds{2});
+  manager.run(kTpNowBase + std::chrono::seconds{2});
 }
 
 TEST(TimerTest, RunAfterMultipleWithSameDelay) {
-  TimerManager manager{kTpNow};
+  TimerManager manager{kTpNowBase};
 
   MockFunction<void()> f;
   MockFunction<void()> g;
@@ -74,18 +74,11 @@ TEST(TimerTest, RunAfterMultipleWithSameDelay) {
   Timer timerg{manager, g.AsStdFunction()};
   timerg.runAfter(std::chrono::seconds{0});
 
-  manager.run(kTpNow + std::chrono::seconds{1});
-}
-
-TEST(TimerTest, Now) {
-  TimerManager manager{kTpNow};
-  ASSERT_EQ(manager.now(), kTpNow);
-  manager.run(kTpNow + std::chrono::seconds{1});
-  ASSERT_EQ(manager.now(), kTpNow + std::chrono::seconds{1});
+  manager.run(kTpNowBase + std::chrono::seconds{1});
 }
 
 TEST(TimerTest, DropTimer) {
-  TimerManager manager{kTpNow};
+  TimerManager manager{kTpNowBase};
 
   MockFunction<void()> f;
   EXPECT_CALL(f, Call()).Times(1);
@@ -93,10 +86,27 @@ TEST(TimerTest, DropTimer) {
   {
     Timer timer{manager, f.AsStdFunction()};
     timer.runAfter(std::chrono::seconds{0});
-    manager.run(kTpNow + std::chrono::seconds{1});
+    manager.run(kTpNowBase + std::chrono::seconds{1});
   }
 
-  manager.run(kTpNow + std::chrono::seconds{2});
+  manager.run(kTpNowBase + std::chrono::seconds{2});
+}
+
+TEST(TimerTest, DropTimerInCallback) {
+  TimerManager manager{kTpNowBase};
+
+  std::shared_ptr<Timer> timer;
+  timer = std::make_shared<Timer>(manager, [&timer]() { timer.reset(); });
+  timer->runAfter(std::chrono::seconds{0});
+
+  manager.run(kTpNowBase + std::chrono::seconds{1});
+}
+
+TEST(TimerTest, Now) {
+  TimerManager manager{kTpNowBase};
+  ASSERT_EQ(manager.now(), kTpNowBase);
+  manager.run(kTpNowBase + std::chrono::seconds{1});
+  ASSERT_EQ(manager.now(), kTpNowBase + std::chrono::seconds{1});
 }
 
 }  // namespace unet

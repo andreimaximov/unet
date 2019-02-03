@@ -5,8 +5,6 @@
 #include <functional>
 #include <memory>
 
-#include <boost/smart_ptr/local_shared_ptr.hpp>
-
 #include <unet/detail/frame.hpp>
 #include <unet/detail/list.hpp>
 #include <unet/detail/queue.hpp>
@@ -67,7 +65,7 @@ class Socket {
 
   SocketSet& socketSet_;
   Queue sendQueue_;
-  boost::local_shared_ptr<Callback> callback_;
+  std::shared_ptr<Callback> callback_;
   Hook<Socket> ownerHook_;
   Hook<Socket> callbackHook_;
   Hook<Socket> dispatchHook_;

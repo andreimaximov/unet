@@ -84,8 +84,6 @@ void ArpQueue::scheduleTimeout(Ipv4Addr hopAddr) {
       }
     });
 
-    // TODO(amaximov): Make it safe for timers to destroys themselves from the
-    // callback.
     timers_.erase(hopAddr);
   });
 
