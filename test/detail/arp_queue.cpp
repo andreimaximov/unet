@@ -88,5 +88,11 @@ TEST_F(ArpQueueTest, DelayAndDrop) {
   ASSERT_FALSE(sendQueue->pop());
 }
 
+TEST_F(ArpQueueTest, DropFrameBadDataLen) {
+  auto f = Frame::make(1);
+  ASSERT_FALSE(arpQueue->delay(std::move(f)));
+  ASSERT_FALSE(sendQueue->pop());
+}
+
 }  // namespace detail
 }  // namespace unet

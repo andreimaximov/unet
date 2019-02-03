@@ -62,7 +62,8 @@ boost::optional<EthernetAddr> ArpQueue::lookup(Ipv4Addr hopAddr) {
 }
 
 bool ArpQueue::delay(std::unique_ptr<Frame> frame) {
-  if (!frame || !delayQueue_.hasCapacity()) {
+  if (!frame || frame->dataLen < sizeof(EthernetHeader) ||
+      !delayQueue_.hasCapacity()) {
     return false;
   }
 
