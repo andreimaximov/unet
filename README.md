@@ -2,6 +2,8 @@
 
 *unet* is a user space TCP/IP stack I'm writing to learn about networking. It is inspired by [picotcp](https://github.com/tass-belgium/picotcp) and [smoltcp](https://github.com/m-labs/smoltcp), two awesome well documented network stacks.
 
+[![Build Status](https://travis-ci.com/andreimaximov/unet.svg?branch=master)](https://travis-ci.com/andreimaximov/unet)
+
 ## Dependencies
 
 - [boost](https://www.boost.org/) - Required
