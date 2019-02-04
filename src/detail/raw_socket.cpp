@@ -121,6 +121,7 @@ void RawSocket::close() {
     // "sent") to be drained before destroying the socket. We shold no longer
     // invoke the callback for this socket.
     pendingEventMaskRemove(0xffff);
+    socketsHook_.unlink();
     closed_ = true;
   }
 }
