@@ -52,7 +52,7 @@ void RawSocket::process(const Frame& f) {
     return;
   }
 
-  auto copy = Frame::make(f);
+  auto copy = Frame::makeCopy(f);
   readQueue_.push(copy);
   pendingEventMaskAdd(eventAsInt(Event::Read));
 }
@@ -70,12 +70,12 @@ std::size_t RawSocket::send(const std::uint8_t* buf, std::size_t bufLen) {
   switch (socketType_) {
     case kEthernet:
       copyLen = std::min(maxTransmissionUnit_, bufLen);
-      f = Frame::make(copyLen);
+      f = Frame::makeUninitialized(copyLen);
       std::copy(buf, buf + copyLen, f->data);
       break;
     case kIpv4:
       copyLen = std::min(maxTransmissionUnit_ - sizeof(EthernetHeader), bufLen);
-      f = Frame::make(sizeof(EthernetHeader) + copyLen);
+      f = Frame::makeUninitialized(sizeof(EthernetHeader) + copyLen);
       f->dataAs<EthernetHeader>()->srcAddr = ethAddr_;
       f->dataAs<EthernetHeader>()->ethType = eth_type::kIpv4;
       f->net = f->data + sizeof(EthernetHeader);

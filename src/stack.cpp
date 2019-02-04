@@ -96,7 +96,7 @@ void Stack::sendLoop() {
 
 void Stack::readLoop() {
   auto frameLen = dev_->maxTransmissionUnit();
-  auto f = detail::Frame::make(frameLen);
+  auto f = detail::Frame::makeUninitialized(frameLen);
   while ((f->dataLen = dev_->read(f->data, frameLen)) > 0) {
     f->net = nullptr;
     f->netLen = 0;

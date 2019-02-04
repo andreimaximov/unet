@@ -29,7 +29,7 @@ class ArpQueueTest : public Test {
   }
 
   Frame* Delay(Ipv4Addr hopAddr, bool shouldSendArp) {
-    auto f = Frame::make(sizeof(EthernetHeader));
+    auto f = Frame::makeUninitialized(sizeof(EthernetHeader));
     f->hopAddr = hopAddr;
     auto p = f.get();
     EXPECT_EQ(arpQueue->delay(std::move(f)), shouldSendArp);
@@ -89,7 +89,7 @@ TEST_F(ArpQueueTest, DelayAndDrop) {
 }
 
 TEST_F(ArpQueueTest, DropFrameBadDataLen) {
-  auto f = Frame::make(1);
+  auto f = Frame::makeUninitialized(1);
   ASSERT_FALSE(arpQueue->delay(std::move(f)));
   ASSERT_FALSE(sendQueue->pop());
 }

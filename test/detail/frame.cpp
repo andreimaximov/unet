@@ -17,7 +17,7 @@ struct S {
 }  // namespace
 
 TEST(FrameTest, Make) {
-  auto f = Frame::make(1024);
+  auto f = Frame::makeUninitialized(1024);
   ASSERT_EQ(f->dataLen, 1024);
 }
 
@@ -28,7 +28,7 @@ TEST(FrameTest, Copy) {
   f1->netLen = 9;
   f1->transportLen = 6;
 
-  auto f2 = Frame::make(*f1);
+  auto f2 = Frame::makeCopy(*f1);
   ASSERT_EQ(f2->net, f2->data + 3);
   ASSERT_EQ(f2->transport, f2->data + 6);
   ASSERT_EQ(f2->netLen, 9);
@@ -36,7 +36,7 @@ TEST(FrameTest, Copy) {
 }
 
 TEST(FrameTest, DataAs) {
-  auto f = Frame::make(sizeof(S));
+  auto f = Frame::makeUninitialized(sizeof(S));
   f->data[0] = 42;
   ASSERT_EQ(f->dataAs<S>()->a, 42);
   f->dataAs<S>()->a = 0;
@@ -44,7 +44,7 @@ TEST(FrameTest, DataAs) {
 }
 
 TEST(FrameTest, NetAs) {
-  auto f = Frame::make(sizeof(S) * 2);
+  auto f = Frame::makeUninitialized(sizeof(S) * 2);
   f->net = f->data + sizeof(S);
   f->netLen = f->dataLen - sizeof(S);
   f->data[4] = 42;

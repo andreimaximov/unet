@@ -12,18 +12,18 @@ Frame::Frame(std::size_t dataLen)
   data = buf_.get();
 }
 
-std::unique_ptr<Frame> Frame::make(std::size_t dataLen) {
+std::unique_ptr<Frame> Frame::makeUninitialized(std::size_t dataLen) {
   return std::unique_ptr<Frame>{new Frame{dataLen}};
 }
 
 std::unique_ptr<Frame> Frame::makeZeros(std::size_t dataLen) {
-  auto f = Frame::make(dataLen);
+  auto f = Frame::makeUninitialized(dataLen);
   std::memset(f->data, 0, dataLen);
   return f;
 }
 
-std::unique_ptr<Frame> Frame::make(const Frame& f) {
-  auto copy = make(f.dataLen);
+std::unique_ptr<Frame> Frame::makeCopy(const Frame& f) {
+  auto copy = makeUninitialized(f.dataLen);
   std::memcpy(copy->data, f.data, f.dataLen);
   if (f.net) {
     BOOST_ASSERT(f.net >= f.data);
@@ -39,7 +39,7 @@ std::unique_ptr<Frame> Frame::make(const Frame& f) {
 }
 
 std::unique_ptr<Frame> Frame::makeStr(boost::string_view data) {
-  auto f = make(data.size());
+  auto f = makeUninitialized(data.size());
   std::memcpy(f->data, data.data(), data.size());
   return f;
 }

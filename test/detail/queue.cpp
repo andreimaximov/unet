@@ -91,7 +91,7 @@ TEST(QueueTest, DestroyHuge) {
   Queue q{100'000};
 
   for (auto count = 0; count < 100'000; count++) {
-    auto f = Frame::make(1);
+    auto f = Frame::makeUninitialized(1);
     q.push(f);
     ASSERT_FALSE(f);
   }

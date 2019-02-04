@@ -32,10 +32,10 @@ class Frame : public NonMovable {
   Ipv4Addr hopAddr{};
 
   // Return a frame w/the specified data length. The data is NOT initialized.
-  static std::unique_ptr<Frame> make(std::size_t dataLen);
+  static std::unique_ptr<Frame> makeUninitialized(std::size_t dataLen);
 
   // Return a frame w/the copied contents of frame f.
-  static std::unique_ptr<Frame> make(const Frame& f);
+  static std::unique_ptr<Frame> makeCopy(const Frame& f);
 
   // Return a zerod frame w/the specified data length.
   static std::unique_ptr<Frame> makeZeros(std::size_t dataLen);
