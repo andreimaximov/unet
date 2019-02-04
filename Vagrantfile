@@ -19,6 +19,7 @@ Vagrant.configure("2") do |config|
         ninja-build                                        \
         python3                                            \
         python3-pip                                        \
+        python3-setuptools                                 \
         tshark                                             \
         tmux                                               \
         unzip                                              \
@@ -33,7 +34,7 @@ Vagrant.configure("2") do |config|
         mkdir build &&                                                         \
         cd build &&                                                            \
         cmake .. &&                                                            \
-        make install
+        sudo make -j $(nproc) install
 
     cd /tmp &&                                                                 \
         wget https://github.com/google/benchmark/archive/v1.4.1.zip &&         \
@@ -42,7 +43,7 @@ Vagrant.configure("2") do |config|
         mkdir build &&                                                         \
         cd build &&                                                            \
         cmake .. &&                                                            \
-        make install
+        sudo make -j $(nproc) install
 
     echo "cd /workspace" >> /home/vagrant/.bashrc
     echo "/workspace/scripts/tap.sh" >> /home/vagrant/.bashrc
