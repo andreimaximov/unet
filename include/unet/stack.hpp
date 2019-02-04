@@ -68,6 +68,7 @@ class Stack : public detail::NonMovable {
   std::shared_ptr<TimerManager> timerManager_;
   detail::ArpQueue arpQueue_;
   bool runningLoop_ = false;
+  bool stoppingLoop_ = false;
 
   friend class RawSocket;
 };

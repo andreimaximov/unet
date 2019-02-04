@@ -27,12 +27,17 @@ Stack::Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr,
 
 void Stack::runLoop() {
   if (runningLoop_) {
-    throw Exception{"runLoop(...) is already running."};
-  };
+    throw Exception{"Loop is already running."};
+  } else if (stoppingLoop_) {
+    throw Exception{"Loop is stopping."};
+  }
 
   runningLoop_ = true;
 
-  BOOST_SCOPE_EXIT(&runningLoop_) { runningLoop_ = false; }
+  BOOST_SCOPE_EXIT(&runningLoop_, &stoppingLoop_) {
+    runningLoop_ = false;
+    stoppingLoop_ = false;
+  }
   BOOST_SCOPE_EXIT_END
 
   while (runningLoop_) {
@@ -41,7 +46,10 @@ void Stack::runLoop() {
 }
 
 void Stack::stopLoop() {
-  runningLoop_ = false;
+  if (runningLoop_) {
+    runningLoop_ = false;
+    stoppingLoop_ = true;
+  }
 }
 
 std::unique_ptr<Timer> Stack::createTimer(std::function<void()> f) {
