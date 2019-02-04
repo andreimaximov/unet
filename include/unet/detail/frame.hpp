@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
 
 #include <boost/assert.hpp>
-#include <boost/utility/string_view.hpp>
 
 #include <unet/detail/nonmovable.hpp>
 #include <unet/wire/ipv4.hpp>
@@ -41,9 +41,9 @@ class Frame : public NonMovable {
   static std::unique_ptr<Frame> makeZeros(std::size_t dataLen);
 
   // Return a frame w/the specified data.
-  static std::unique_ptr<Frame> makeStr(boost::string_view data);
+  static std::unique_ptr<Frame> makeStr(const std::string& s);
 
-  bool operator==(boost::string_view data) const;
+  bool operator==(const std::string& data) const;
 
   template <typename T>
   T* dataAs() {

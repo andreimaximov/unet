@@ -38,13 +38,13 @@ std::unique_ptr<Frame> Frame::makeCopy(const Frame& f) {
   return copy;
 }
 
-std::unique_ptr<Frame> Frame::makeStr(boost::string_view data) {
-  auto f = makeUninitialized(data.size());
-  std::memcpy(f->data, data.data(), data.size());
+std::unique_ptr<Frame> Frame::makeStr(const std::string& s) {
+  auto f = makeUninitialized(s.size());
+  std::memcpy(f->data, s.data(), s.size());
   return f;
 }
 
-bool Frame::operator==(boost::string_view data) const {
+bool Frame::operator==(const std::string& data) const {
   return (dataLen == data.size()) &&
          (std::memcmp(this->data,
                       reinterpret_cast<const std::uint8_t*>(data.data()),

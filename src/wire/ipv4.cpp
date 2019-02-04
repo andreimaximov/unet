@@ -29,11 +29,11 @@ std::ostream& operator<<(std::ostream& os, Ipv4Addr ipv4Addr) {
   return os << fmt;
 }
 
-Ipv4Addr parseIpv4(boost::string_view rawIpv4Addr) {
+Ipv4Addr parseIpv4(const std::string& rawIpv4Addr) {
   static const std::regex kIpv4Base{
       "\\s*([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)\\s*"};
 
-  std::match_results<boost::string_view::const_iterator> tokens;
+  std::smatch tokens;
   if (!std::regex_match(rawIpv4Addr.begin(), rawIpv4Addr.end(), tokens,
                         kIpv4Base)) {
     throw Exception{kBadIpv4Addr};

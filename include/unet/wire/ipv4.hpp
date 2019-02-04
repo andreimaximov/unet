@@ -3,8 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <ostream>
-
-#include <boost/utility/string_view.hpp>
+#include <string>
 
 #include <unet/wire/wire.hpp>
 
@@ -23,7 +22,7 @@ std::ostream& operator<<(std::ostream& os, Ipv4Addr ipv4Addr);
 
 // Return a parsed IPv4 address from a string. Throws an Exception in case of an
 // error.
-Ipv4Addr parseIpv4(boost::string_view rawIpv4Addr);
+Ipv4Addr parseIpv4(const std::string& rawIpv4Addr);
 
 // An IPv4 address w/a subnet mask.
 class Ipv4AddrCidr {

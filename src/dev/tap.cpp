@@ -19,7 +19,7 @@
 
 namespace unet {
 
-Tap::Tap(boost::string_view name) {
+Tap::Tap(const std::string& name) {
 #ifdef __linux__
   if (name.size() >= IFNAMSIZ) {
     throw Exception{"Interface name should be < IFNAMSIZ."};

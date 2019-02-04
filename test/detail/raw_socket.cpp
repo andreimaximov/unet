@@ -15,7 +15,7 @@ using testing::Test;
 
 using MockCallback = StrictMock<MockFunction<void(std::uint32_t)>>;
 
-static const boost::string_view kMessage = "Knock knock, who's there?";
+static const std::string kMessage = "Knock knock, who's there?";
 
 class RawSocketTest : public Test {
  public:
@@ -37,8 +37,7 @@ class RawSocketTest : public Test {
     std::uint8_t buf[1024];
     auto readLen = socket->read(buf, sizeof(buf));
     ASSERT_EQ(readLen, kMessage.size());
-    ASSERT_EQ(boost::string_view(reinterpret_cast<char*>(buf), readLen),
-              kMessage);
+    ASSERT_EQ((std::string{reinterpret_cast<char*>(buf), readLen}), kMessage);
   }
 
   SocketSet ss;
