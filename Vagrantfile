@@ -15,7 +15,6 @@ Vagrant.configure("2") do |config|
         clang-format                                       \
         cmake                                              \
         libboost-all-dev                                   \
-        libgflags-dev                                      \
         ninja-build                                        \
         python3                                            \
         python3-pip                                        \
@@ -28,12 +27,21 @@ Vagrant.configure("2") do |config|
     sudo pip3 install meson
 
     cd /tmp &&                                                                 \
+        wget https://github.com/gflags/gflags/archive/v2.2.2.zip &&            \
+        unzip v2.2.2.zip &&                                                    \
+        cd gflags-2.2.2 &&                                                     \
+        mkdir build &&                                                         \
+        cd build &&                                                            \
+        cmake -DCMAKE_BUILD_TYPE=RELEASE .. &&                                 \
+        sudo make -j $(nproc) install
+
+    cd /tmp &&                                                                 \
         wget https://github.com/abseil/googletest/archive/release-1.8.1.zip && \
         unzip release-1.8.1.zip &&                                             \
         cd googletest-release-1.8.1 &&                                         \
         mkdir build &&                                                         \
         cd build &&                                                            \
-        cmake .. &&                                                            \
+        cmake -DCMAKE_BUILD_TYPE=RELEASE .. &&                                 \
         sudo make -j $(nproc) install
 
     cd /tmp &&                                                                 \
@@ -42,17 +50,14 @@ Vagrant.configure("2") do |config|
         cd benchmark-1.4.1 &&                                                  \
         mkdir build &&                                                         \
         cd build &&                                                            \
-        cmake .. &&                                                            \
+        cmake -DCMAKE_BUILD_TYPE=RELEASE .. &&                                 \
         sudo make -j $(nproc) install
 
     echo "cd /workspace" >> /home/vagrant/.bashrc
     echo "/workspace/scripts/tap.sh" >> /home/vagrant/.bashrc
   SHELL
-  config.vm.network "private_network", ip: "10.255.255.101"
   config.vm.provider "virtualbox" do |vb|
     vb.cpus = "4"
     vb.memory = "4096"
-    vb.customize ["modifyvm", :id, "--nicpromisc1", "allow-all"]
-    vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
   end
 end

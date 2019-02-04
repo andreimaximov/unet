@@ -102,7 +102,7 @@ if gflags.found()
         example_exes += executable(
             name,
             [cpp],
-            dependencies : [boost, gflags],
+            dependencies : [boost, gflags, threads],
             include_directories : incdirs,
             link_with : lib,
         )

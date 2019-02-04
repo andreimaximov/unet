@@ -60,7 +60,7 @@ class SmokeTest(unittest.TestCase):
     def testArpingReply(self):
         with runNetworkStack():
             stdout = runAndCheck(
-                ['sudo', 'arping', DEV_IP, '-i', 'br0', '-c', '1'])
+                ['sudo', 'arping', DEV_IP, '-i', 'tap0', '-c', '1'])
             self.assertIn(DEV_ETH, stdout)
 
     def testArpingGateway(self):
