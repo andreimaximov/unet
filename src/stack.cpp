@@ -1,9 +1,12 @@
 #include <unet/stack.hpp>
 
+#include <cstring>
+
 #include <boost/scope_exit.hpp>
 
 #include <unet/exception.hpp>
 #include <unet/wire/arp.hpp>
+#include <unet/wire/icmpv4.hpp>
 
 namespace unet {
 
@@ -74,7 +77,7 @@ void Stack::runLoopOnce() {
 
 void Stack::sendLoop() {
   while (auto f = sendQueue_->peek()) {
-    if (f->doIpv4Routing && !sendIpv4(*f)) {
+    if (f->doIpv4Routing && !tryNextIpv4Hop(*f)) {
       // Lookup of the Ethernet address for the next hop has failed.
       if (arpQueue_.delay(sendQueue_->pop())) {
         // Send an ARP request for the hop and delay the frame in the meantime.
@@ -141,6 +144,27 @@ void Stack::processArp(detail::Frame& f) {
   }
 }
 
+void Stack::sendArp(Ipv4Addr dstIpv4Addr, EthernetAddr dstHwAddr,
+                    std::uint16_t arpOp) {
+  send(sizeof(ArpHeader),
+       [this, dstIpv4Addr, dstHwAddr, arpOp](detail::Frame& f) {
+         auto eth = f.dataAs<EthernetHeader>();
+         eth->dstAddr = dstHwAddr;
+         eth->ethType = eth_type::kArp;
+
+         auto arp = f.netAs<ArpHeader>();
+         arp->hwType = arp_hw_addr::kEth;
+         arp->protoType = arp_proto_addr::kIpv4;
+         arp->hwLen = 6;
+         arp->protoLen = 4;
+         arp->op = arpOp;
+         arp->srcHwAddr = ethAddr_;
+         arp->srcProtoAddr = *ipv4AddrCidr_;
+         arp->dstHwAddr = dstHwAddr;
+         arp->dstProtoAddr = dstIpv4Addr;
+       });
+}
+
 void Stack::processIpv4(detail::Frame& f) {
   if (f.netLen < sizeof(Ipv4Header)) {
     return;
@@ -154,43 +178,20 @@ void Stack::processIpv4(detail::Frame& f) {
     return;
   }
 
+  f.transport = f.net + headerLen;
+  f.transportLen = f.netLen - headerLen;
+
   // Safe loop because process(...) is guaranteed to not destroy the socket.
   for (detail::Hook<detail::RawSocket>& hook : ipv4Sockets_) {
     hook->process(f);
   }
-}
 
-void Stack::sendArp(Ipv4Addr dstIpv4Addr, EthernetAddr dstHwAddr,
-                    std::uint16_t arpOp) {
-  if (!sendQueue_->hasCapacity()) {
-    return;
+  if (ipv4->proto == ipv4_proto::kIcmp) {
+    processIcmpv4(f);
   }
-
-  auto f = detail::Frame::make(sizeof(EthernetHeader) + sizeof(ArpHeader));
-
-  auto eth = f->dataAs<EthernetHeader>();
-  eth->srcAddr = ethAddr_;
-  eth->dstAddr = dstHwAddr;
-  eth->ethType = eth_type::kArp;
-
-  f->net = f->data + sizeof(EthernetHeader);
-  f->netLen = f->dataLen - sizeof(EthernetHeader);
-
-  auto arp = f->netAs<ArpHeader>();
-  arp->hwType = arp_hw_addr::kEth;
-  arp->protoType = arp_proto_addr::kIpv4;
-  arp->hwLen = 6;
-  arp->protoLen = 4;
-  arp->op = arpOp;
-  arp->srcHwAddr = ethAddr_;
-  arp->srcProtoAddr = *ipv4AddrCidr_;
-  arp->dstHwAddr = dstHwAddr;
-  arp->dstProtoAddr = dstIpv4Addr;
-
-  sendQueue_->push(f);
 }
 
-bool Stack::sendIpv4(detail::Frame& f) {
+bool Stack::tryNextIpv4Hop(detail::Frame& f) {
   auto dstAddr = f.netAs<Ipv4Header>()->dstAddr;
   f.hopAddr = ipv4AddrCidr_.isInSubnet(dstAddr) ? dstAddr : defaultGateway_;
 
@@ -201,6 +202,33 @@ bool Stack::sendIpv4(detail::Frame& f) {
 
   f.dataAs<EthernetHeader>()->dstAddr = *ethAddr;
   return true;
+}
+
+void Stack::processIcmpv4(detail::Frame& f) {
+  if (f.transportLen < sizeof(Icmpv4Header)) {
+    return;
+  }
+
+  auto icmp = f.transportAs<Icmpv4Header>();
+  auto payloadLen = f.transportLen - sizeof(Icmpv4Header);
+  if (icmp->type != 8 || icmp->code != 0 ||
+      checksumIcmpv4(icmp, payloadLen) != 0) {
+    return;
+  }
+
+  auto dstAddr = f.netAs<Ipv4Header>()->srcAddr;
+  sendIpv4(sizeof(Icmpv4Header) + payloadLen, [icmp, payloadLen,
+                                               dstAddr](detail::Frame& f) {
+    auto ipv4 = f.netAs<Ipv4Header>();
+    ipv4->proto = ipv4_proto::kIcmp;
+    ipv4->dstAddr = dstAddr;
+
+    auto icmp_ = f.transportAs<Icmpv4Header>();
+    icmp_->type = 0;
+    icmp_->code = 0;
+    std::memcpy(icmp_->data, icmp->data, sizeof(Icmpv4Echo) + payloadLen);
+    icmp_->checksum = checksumIcmpv4(icmp_, payloadLen);
+  });
 }
 
 }  // namespace unet

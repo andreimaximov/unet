@@ -17,8 +17,10 @@ class Frame : public NonMovable {
  public:
   std::uint8_t* data = nullptr;
   std::uint8_t* net = nullptr;
+  std::uint8_t* transport = nullptr;
   std::size_t dataLen = 0;
   std::size_t netLen = 0;
+  std::size_t transportLen = 0;
 
   // We need this to distinguish between IPv4 frames which we need to perform an
   // Ethernet address lookup and those for which we do not (eg. IPv4 frames
@@ -35,6 +37,9 @@ class Frame : public NonMovable {
   // Return a frame w/the copied contents of frame f.
   static std::unique_ptr<Frame> make(const Frame& f);
 
+  // Return a zerod frame w/the specified data length.
+  static std::unique_ptr<Frame> makeZeros(std::size_t dataLen);
+
   // Return a frame w/the specified data.
   static std::unique_ptr<Frame> makeStr(boost::string_view data);
 
@@ -48,6 +53,11 @@ class Frame : public NonMovable {
   template <typename T>
   T* netAs() {
     return bufAs<T>(net, netLen);
+  }
+
+  template <typename T>
+  T* transportAs() {
+    return bufAs<T>(transport, transportLen);
   }
 
  private:

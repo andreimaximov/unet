@@ -81,6 +81,11 @@ class SmokeTest(unittest.TestCase):
                                   'Timeout\n'
                                   'Timeout\n'))
 
+    def testPingReply(self):
+        with runNetworkStack():
+            stdout = runAndCheck(['ping', DEV_IP, '-c', '1'])
+            self.assertIn(DEV_IP, stdout)
+
     def testPingGateway(self):
         stdout = runAndCheck(
             [pathToExample('ping'), '--addr', GATEWAY_IP, '--count', '4'])
