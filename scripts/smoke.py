@@ -79,6 +79,16 @@ class SmokeTest(unittest.TestCase):
                 ['sudo', 'arping', DEV_IP, '-i', 'tap0', '-c', '1'])
             self.assertIn(DEV_ETH, stdout)
 
+    def testArpingSelf(self):
+        stdout = runAndCheck(
+            [pathToExample('arping'), '--addr', DEV_IP, '--count', '4'])
+        self.assertRegex(stdout, (
+            '28 bytes from 06:11:22:33:44:55 \(10.255.255.102\) index=1 time=\d+ ms\n'
+            '28 bytes from 06:11:22:33:44:55 \(10.255.255.102\) index=2 time=\d+ ms\n'
+            '28 bytes from 06:11:22:33:44:55 \(10.255.255.102\) index=3 time=\d+ ms\n'
+            '28 bytes from 06:11:22:33:44:55 \(10.255.255.102\) index=4 time=\d+ ms\n'
+        ))
+
     def testArpingGateway(self):
         stdout = runAndCheck(
             [pathToExample('arping'), '--addr', GATEWAY_IP, '--count', '4'])
@@ -101,6 +111,16 @@ class SmokeTest(unittest.TestCase):
         with runNetworkStack():
             stdout = runAndCheck(['ping', DEV_IP, '-c', '1'])
             self.assertIn(DEV_IP, stdout)
+
+    def testPingSelf(self):
+        stdout = runAndCheck(
+            [pathToExample('ping'), '--addr', DEV_IP, '--count', '4'])
+        self.assertRegex(
+            stdout,
+            ('64 bytes from 10.255.255.102: icmp_seq=1 ttl=64 time=\d+ ms\n'
+             '64 bytes from 10.255.255.102: icmp_seq=2 ttl=64 time=\d+ ms\n'
+             '64 bytes from 10.255.255.102: icmp_seq=3 ttl=64 time=\d+ ms\n'
+             '64 bytes from 10.255.255.102: icmp_seq=4 ttl=64 time=\d+ ms\n'))
 
     def testPingGateway(self):
         stdout = runAndCheck(

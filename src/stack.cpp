@@ -88,8 +88,18 @@ void Stack::sendLoop() {
       continue;
     }
 
-    if (dev_->send(f->data, f->dataLen) == 0) {
+    // Only send on the link if the frame is not destined for us.
+    auto dstAddr = f->dataAs<EthernetHeader>()->dstAddr;
+    auto shouldSendOnLink = dstAddr != ethAddr_;
+    if (shouldSendOnLink && dev_->send(f->data, f->dataLen) == 0) {
+      // Link exhausted, try again on the next loop.
       return;
+    }
+
+    // We can drop the frame now that it has made it onto the link (or we didn't
+    // try sending it at all). Check if we need to loopback before doing so.
+    if (dstAddr == ethAddr_ || dstAddr == kEthernetBcastAddr) {
+      process(*f);
     }
 
     sendQueue_->pop();
@@ -199,8 +209,9 @@ void Stack::processIpv4(detail::Frame& f) {
 bool Stack::tryNextIpv4Hop(detail::Frame& f) {
   auto dstAddr = f.netAs<Ipv4Header>()->dstAddr;
   f.hopAddr = ipv4AddrCidr_.isInSubnet(dstAddr) ? dstAddr : defaultGateway_;
+  auto ethAddr =
+      (f.hopAddr == *ipv4AddrCidr_) ? ethAddr_ : arpQueue_.lookup(f.hopAddr);
 
-  auto ethAddr = arpQueue_.lookup(f.hopAddr);
   if (!ethAddr) {
     return false;
   }
