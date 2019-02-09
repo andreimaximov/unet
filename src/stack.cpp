@@ -20,7 +20,9 @@ Stack::Stack(std::unique_ptr<Dev> dev, EthernetAddr ethAddr,
       sendQueue_{std::make_shared<detail::Queue>(opts.stackSendQueueLen)},
       timerManager_{std::make_shared<TimerManager>()},
       arpQueue_{opts.arpQueueLen, opts.arpCacheSize, opts.arpTimeout,
-                opts.arpCacheTTL, sendQueue_,        timerManager_} {
+                opts.arpCacheTTL, sendQueue_,        timerManager_},
+      serializer_{
+          std::make_shared<detail::Serializer>(ethAddr, *ipv4AddrCidr)} {
   if (!dev_) {
     throw Exception{"Invalid dev."};
   } else if (!ipv4AddrCidr.isInSubnet(defaultGateway)) {
@@ -146,23 +148,26 @@ void Stack::processArp(detail::Frame& f) {
 
 void Stack::sendArp(Ipv4Addr dstIpv4Addr, EthernetAddr dstHwAddr,
                     std::uint16_t arpOp) {
-  send(sizeof(ArpHeader),
-       [this, dstIpv4Addr, dstHwAddr, arpOp](detail::Frame& f) {
-         auto eth = f.dataAs<EthernetHeader>();
-         eth->dstAddr = dstHwAddr;
-         eth->ethType = eth_type::kArp;
+  if (sendQueue_->hasCapacity()) {
+    auto f = serializer_->make(sizeof(ArpHeader), [this, dstIpv4Addr, dstHwAddr,
+                                                   arpOp](detail::Frame& f) {
+      auto eth = f.dataAs<EthernetHeader>();
+      eth->dstAddr = dstHwAddr;
+      eth->ethType = eth_type::kArp;
 
-         auto arp = f.netAs<ArpHeader>();
-         arp->hwType = arp_hw_addr::kEth;
-         arp->protoType = arp_proto_addr::kIpv4;
-         arp->hwLen = 6;
-         arp->protoLen = 4;
-         arp->op = arpOp;
-         arp->srcHwAddr = ethAddr_;
-         arp->srcProtoAddr = *ipv4AddrCidr_;
-         arp->dstHwAddr = dstHwAddr;
-         arp->dstProtoAddr = dstIpv4Addr;
-       });
+      auto arp = f.netAs<ArpHeader>();
+      arp->hwType = arp_hw_addr::kEth;
+      arp->protoType = arp_proto_addr::kIpv4;
+      arp->hwLen = 6;
+      arp->protoLen = 4;
+      arp->op = arpOp;
+      arp->srcHwAddr = ethAddr_;
+      arp->srcProtoAddr = *ipv4AddrCidr_;
+      arp->dstHwAddr = dstHwAddr;
+      arp->dstProtoAddr = dstIpv4Addr;
+    });
+    sendQueue_->push(f);
+  }
 }
 
 void Stack::processIpv4(detail::Frame& f) {
@@ -216,19 +221,23 @@ void Stack::processIcmpv4(detail::Frame& f) {
     return;
   }
 
-  auto dstAddr = f.netAs<Ipv4Header>()->srcAddr;
-  sendIpv4(sizeof(Icmpv4Header) + payloadLen, [icmp, payloadLen,
-                                               dstAddr](detail::Frame& f) {
-    auto ipv4 = f.netAs<Ipv4Header>();
-    ipv4->proto = ipv4_proto::kIcmp;
-    ipv4->dstAddr = dstAddr;
+  if (sendQueue_->hasCapacity()) {
+    auto dstAddr = f.netAs<Ipv4Header>()->srcAddr;
+    auto f = serializer_->makeIpv4(
+        sizeof(Icmpv4Header) + payloadLen,
+        [icmp, payloadLen, dstAddr](detail::Frame& f) {
+          auto ipv4 = f.netAs<Ipv4Header>();
+          ipv4->proto = ipv4_proto::kIcmp;
+          ipv4->dstAddr = dstAddr;
 
-    auto icmp_ = f.transportAs<Icmpv4Header>();
-    icmp_->type = 0;
-    icmp_->code = 0;
-    std::memcpy(icmp_->data, icmp->data, sizeof(Icmpv4Echo) + payloadLen);
-    icmp_->checksum = checksumIcmpv4(icmp_, payloadLen);
-  });
+          auto icmp_ = f.transportAs<Icmpv4Header>();
+          icmp_->type = 0;
+          icmp_->code = 0;
+          std::memcpy(icmp_->data, icmp->data, sizeof(Icmpv4Echo) + payloadLen);
+          icmp_->checksum = checksumIcmpv4(icmp_, payloadLen);
+        });
+    sendQueue_->push(f);
+  }
 }
 
 }  // namespace unet

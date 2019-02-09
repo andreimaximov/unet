@@ -21,8 +21,14 @@ class RawSocketTest : public Test {
  public:
   void SetUp() override {
     socket =
-        new RawSocket{RawSocket::kEthernet, 2,       2,  1500,
-                      EthernetAddr{},       sockets, ss, cb.AsStdFunction()};
+        new RawSocket{RawSocket::kEthernet,
+                      2,
+                      2,
+                      1500,
+                      std::make_shared<Serializer>(EthernetAddr{}, Ipv4Addr{}),
+                      sockets,
+                      ss,
+                      cb.AsStdFunction()};
     socket->subscribedEventMaskAdd(Event::Send | Event::Read);
   }
 

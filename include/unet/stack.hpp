@@ -10,6 +10,7 @@
 #include <unet/detail/nonmovable.hpp>
 #include <unet/detail/queue.hpp>
 #include <unet/detail/raw_socket.hpp>
+#include <unet/detail/serializer.hpp>
 #include <unet/detail/socket_set.hpp>
 #include <unet/dev/dev.hpp>
 #include <unet/options.hpp>
@@ -57,46 +58,6 @@ class Stack : public detail::NonMovable {
   bool tryNextIpv4Hop(detail::Frame& f);
   void processIcmpv4(detail::Frame& f);
 
-  template <typename F>
-  void send(std::size_t netLen, F&& serializer) {
-    if (!sendQueue_->hasCapacity()) {
-      return;
-    }
-
-    auto f = detail::Frame::makeZeros(sizeof(EthernetHeader) + netLen);
-    f->dataAs<EthernetHeader>()->srcAddr = ethAddr_;
-    f->net = f->data + sizeof(EthernetHeader);
-    f->netLen = netLen;
-
-    serializer(*f);
-
-    sendQueue_->push(f);
-  }
-
-  template <typename F>
-  void sendIpv4(std::size_t transportLen, F&& serializer) {
-    auto netLen = sizeof(Ipv4Header) + transportLen;
-    send(netLen, [this, &serializer, transportLen, netLen](detail::Frame& f) {
-      auto eth = f.dataAs<EthernetHeader>();
-      eth->ethType = eth_type::kIpv4;
-
-      auto ipv4 = f.netAs<Ipv4Header>();
-      ipv4->ihl = 5;
-      ipv4->version = 4;
-      ipv4->len = hostToNet<std::uint16_t>(netLen);
-      ipv4->ttl = 64;
-      ipv4->srcAddr = *ipv4AddrCidr_;
-      f.transport = f.net + sizeof(Ipv4Header);
-      f.transportLen = transportLen;
-      f.doIpv4Routing = true;
-
-      serializer(f);
-
-      ipv4->checksum = 0;
-      ipv4->checksum = checksumIpv4(ipv4);
-    });
-  }
-
   std::unique_ptr<Dev> dev_;
   EthernetAddr ethAddr_;
   Ipv4AddrCidr ipv4AddrCidr_;
@@ -108,6 +69,7 @@ class Stack : public detail::NonMovable {
   detail::List<detail::RawSocket> ipv4Sockets_;
   std::shared_ptr<TimerManager> timerManager_;
   detail::ArpQueue arpQueue_;
+  std::shared_ptr<detail::Serializer> serializer_;
   bool runningLoop_ = false;
   bool stoppingLoop_ = false;
 

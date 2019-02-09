@@ -10,7 +10,7 @@ RawSocket::RawSocket(Stack& stack, Type type,
       stack.opts_.rawSocketSendQueueLen,
       stack.opts_.rawSocketReadQueueLen,
       stack.dev_->maxTransmissionUnit(),
-      stack.ethAddr_,
+      stack.serializer_,
       (type == kEthernet) ? stack.ethernetSockets_ : stack.ipv4Sockets_,
       stack.socketSet_,
       [this, callback](auto mask) { callback(*this, mask); }};

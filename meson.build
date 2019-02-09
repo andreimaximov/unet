@@ -29,6 +29,7 @@ lib = library(
         'src/detail/frame.cpp',
         'src/detail/queue.cpp',
         'src/detail/raw_socket.cpp',
+        'src/detail/serializer.cpp',
         'src/detail/socket.cpp',
         'src/detail/socket_set.cpp',
         'src/dev/tap.cpp',

@@ -6,6 +6,7 @@
 #include <unet/detail/frame.hpp>
 #include <unet/detail/list.hpp>
 #include <unet/detail/queue.hpp>
+#include <unet/detail/serializer.hpp>
 #include <unet/detail/socket.hpp>
 #include <unet/wire/ethernet.hpp>
 
@@ -20,7 +21,7 @@ class RawSocket : public Socket {
 
   RawSocket(std::uint32_t socketType, std::size_t sendQueueLen,
             std::size_t readQueueLen, std::size_t maxTransmissionUnit,
-            EthernetAddr ethAddr, List<RawSocket>& sockets,
+            std::shared_ptr<Serializer> serializer, List<RawSocket>& sockets,
             SocketSet& socketSet, Callback callback);
 
   ~RawSocket() override = default;
@@ -43,7 +44,7 @@ class RawSocket : public Socket {
   Hook<RawSocket> socketsHook_;
   Queue readQueue_;
   std::size_t maxTransmissionUnit_;
-  EthernetAddr ethAddr_;
+  std::shared_ptr<Serializer> serializer_;
   bool closed_ = false;
 };
 

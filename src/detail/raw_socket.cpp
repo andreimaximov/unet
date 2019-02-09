@@ -12,14 +12,15 @@ namespace detail {
 
 RawSocket::RawSocket(std::uint32_t socketType, std::size_t sendQueueLen,
                      std::size_t readQueueLen, std::size_t maxTransmissionUnit,
-                     EthernetAddr ethAddr, List<RawSocket>& sockets,
-                     SocketSet& socketSet, Callback callback)
+                     std::shared_ptr<Serializer> serializer,
+                     List<RawSocket>& sockets, SocketSet& socketSet,
+                     Callback callback)
     : Socket{socketSet, sendQueueLen, callback},
       socketType_{socketType},
       socketsHook_{this},
       readQueue_{readQueueLen},
       maxTransmissionUnit_{maxTransmissionUnit},
-      ethAddr_{ethAddr} {
+      serializer_{serializer} {
   if (socketType_ != kEthernet && socketType_ != kIpv4) {
     throw Exception{"Unknown socket type."};
   }
@@ -75,13 +76,11 @@ std::size_t RawSocket::send(const std::uint8_t* buf, std::size_t bufLen) {
       break;
     case kIpv4:
       copyLen = std::min(maxTransmissionUnit_ - sizeof(EthernetHeader), bufLen);
-      f = Frame::makeUninitialized(sizeof(EthernetHeader) + copyLen);
-      f->dataAs<EthernetHeader>()->srcAddr = ethAddr_;
-      f->dataAs<EthernetHeader>()->ethType = eth_type::kIpv4;
-      f->net = f->data + sizeof(EthernetHeader);
-      f->netLen = f->dataLen - sizeof(EthernetHeader);
-      f->doIpv4Routing = true;
-      std::copy(buf, buf + copyLen, f->net);
+      f = serializer_->make(copyLen, [buf, copyLen](detail::Frame& f) {
+        f.dataAs<EthernetHeader>()->ethType = eth_type::kIpv4;
+        std::copy(buf, buf + copyLen, f.net);
+        f.doIpv4Routing = true;
+      });
       break;
   }
 
