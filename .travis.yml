@@ -16,6 +16,6 @@ script:
   - cd ${TRAVIS_BUILD_DIR}
   - meson build
   - cd build
-  - meson configure -Dbuildtype=release -Db_sanitize=address,undefined
+  - meson configure -Dbuildtype=release -Db_sanitize=address,undefined -Db_lundef=false # https://github.com/mesonbuild/meson/issues/3853
   - ninja test
   - ninja smoke
