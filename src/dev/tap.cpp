@@ -59,6 +59,7 @@ Tap::Tap(const std::string& name) {
   close(sockfd);
 
 #else
+  (void)name;
   throw Exception{"Tap devices are supported only on Linux."};
 #endif
 }

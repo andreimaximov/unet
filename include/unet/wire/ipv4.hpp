@@ -59,7 +59,6 @@ struct UNET_PACK Ipv4Header {
   std::uint16_t checksum;
   Ipv4Addr srcAddr;
   Ipv4Addr dstAddr;
-  std::uint8_t options[];
 };
 
 UNET_ASSERT_SIZE(Ipv4Header, 20);

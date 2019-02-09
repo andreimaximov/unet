@@ -1,7 +1,10 @@
 project(
     'unet',
     'cpp',
-    default_options : ['cpp_std=c++14'],
+    default_options : [
+        'cpp_std=c++14',
+        'warning_level=3',
+    ],
     license : 'MIT',
     version : '0.0.1',
 )

@@ -44,7 +44,7 @@ class SocketTest : public Test {
     s3->subscribedEventMaskAdd(1);
   }
 
-  static void NoOp(std::uint32_t mask) {}
+  static void NoOp(std::uint32_t) {}
 
   void ExpectCallback1(std::uint32_t mask, Socket::Callback cb = NoOp) {
     EXPECT_CALL(cb1, Call(mask)).WillOnce(Invoke(cb));

@@ -17,7 +17,7 @@ static const EthernetAddr kHwAddr{{0x06, 0x11, 0x22, 0x33, 0x44, 0x55}};
 static const Ipv4AddrCidr kIpv4AddrCidr{Ipv4Addr{10, 255, 255, 102}, 24};
 static const Ipv4Addr kDefaultGateway{10, 255, 255, 101};
 
-static bool validateIpv4Addr(const char* flagname, const std::string& raw) {
+static bool validateIpv4Addr(const char*, const std::string& raw) {
   try {
     parseIpv4(raw);
     return true;

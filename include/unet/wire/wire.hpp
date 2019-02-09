@@ -12,7 +12,7 @@ namespace unet {
 #define UNET_PACK __attribute__((packed))
 
 #define UNET_ASSERT_SIZE(type, size) \
-  static_assert(sizeof(type) == size, "Type has an unexpected size!");
+  static_assert(sizeof(type) == size, "Type has an unexpected size!")
 
 // Performs a host to network byte order conversion on x.
 //
