@@ -13,6 +13,19 @@ UNKNOWN_IP = '10.255.255.103'
 GOOGLE_DNS_IP = '8.8.8.8'
 
 
+class SubprocessError(Exception):
+    def __init__(self, subprocess_err):
+        self._subprocess_err = subprocess_err
+
+    def __str__(self):
+        stdout = self._subprocess_err.stdout
+        stderr = self._subprocess_err.stderr
+        return 'err: {}, stdout: {}, stderr: {}'.format(
+            self._subprocess_err,
+            str(stdout, 'ascii') if stdout is not None else '',
+            str(stderr, 'ascii') if stderr is not None else '')
+
+
 def pathToExample(name):
     build = os.getenv('MESON_BUILD_ROOT', os.getcwd())
     example = os.path.join(build, name)
@@ -22,13 +35,16 @@ def pathToExample(name):
 
 
 def runAndCheck(command):
-    return str(
-        subprocess.run(
+    try:
+        out = subprocess.run(
             command,
             check=True,
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            timeout=10).stdout, 'ascii')
+            timeout=10).stdout
+        return str(out, 'ascii')
+    except subprocess.CalledProcessError as e:
+        raise SubprocessError(e)
 
 
 @contextlib.contextmanager
