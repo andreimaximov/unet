@@ -49,4 +49,3 @@ sudo ip link set tap0 up
 # Enable IPv4 forwarding and NAT routing...
 sudo iptables -t nat -A POSTROUTING -o $IFR -j MASQUERADE
 sudo sysctl net.ipv4.ip_forward=1
-

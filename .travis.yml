@@ -9,43 +9,13 @@ compiler:
 branches:
   only: ["master"]
 install:
-  - sudo apt-get update
-  - |
-    sudo apt-get install -y                              \
-      arping                                             \
-      build-essential                                    \
-      cmake                                              \
-      libboost-all-dev                                   \
-      ninja-build                                        \
-      python3                                            \
-      python3-pip                                        \
-      python3-setuptools                                 \
-      unzip                                              \
-      wget
-  - sudo pip3 install meson
-  - |
-    cd /tmp &&                                                             \
-    wget https://github.com/gflags/gflags/archive/v2.2.2.zip &&            \
-    unzip v2.2.2.zip &&                                                    \
-    cd gflags-2.2.2 &&                                                     \
-    mkdir build &&                                                         \
-    cd build &&                                                            \
-    cmake -DCMAKE_BUILD_TYPE=RELEASE .. &&                                 \
-    sudo make -j $(nproc) install
-  - |
-    cd /tmp &&                                                             \
-    wget https://github.com/abseil/googletest/archive/release-1.8.1.zip && \
-    unzip release-1.8.1.zip &&                                             \
-    cd googletest-release-1.8.1 &&                                         \
-    mkdir build &&                                                         \
-    cd build &&                                                            \
-    cmake -DCMAKE_BUILD_TYPE=RELEASE .. &&                                 \
-    sudo make -j $(nproc) install
+  - cd ${TRAVIS_BUILD_DIR}
+  - ./scripts/install-deps.sh
+  - ./scripts/tap.sh
 script:
   - cd ${TRAVIS_BUILD_DIR}
   - meson build
   - cd build
   - meson configure -Dbuildtype=release -Db_sanitize=address,undefined
   - ninja test
-  - ${TRAVIS_BUILD_DIR}/scripts/tap.sh
   - ninja smoke

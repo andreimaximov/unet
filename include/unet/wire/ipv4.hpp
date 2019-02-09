@@ -5,6 +5,8 @@
 #include <ostream>
 #include <string>
 
+#include <boost/predef/other/endian.h>
+
 #include <unet/wire/wire.hpp>
 
 namespace unet {
@@ -40,16 +42,18 @@ class Ipv4AddrCidr {
 
 struct UNET_PACK Ipv4Header {
 // Careful with order of members on compilers for targets w/different endianess.
-#ifdef BOOST_LITTLE_ENDIAN
+#ifdef BOOST_ENDIAN_LITTLE_BYTE
   std::uint8_t ihl : 4;
   std::uint8_t version : 4;
   std::uint8_t ecn : 2;
   std::uint8_t dscp : 6;
-#elif BOOST_BIG_ENDIAN
+#elif BOOST_ENDIAN_BIG_BYTE
   std::uint8_t version : 4;
   std::uint8_t ihl : 4;
   std::uint8_t dscp : 6;
   std::uint8_t ecn : 2;
+#else
+  #error "Unknown endianess!"
 #endif
   std::uint16_t len;
   std::uint16_t id;
