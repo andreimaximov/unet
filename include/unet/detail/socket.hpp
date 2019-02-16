@@ -26,7 +26,8 @@ class Socket {
   // on the heap w/operator new for destroy(...) to work. All methods of the
   // public API are safe to call inline from this or any other socket's
   // callback.
-  Socket(SocketSet& socketSet, std::size_t sendQueueLen, Callback callback);
+  Socket(SocketSet& socketSet, std::size_t sendQueueLen,
+         Queue::Policy sendQueuePolicy, Callback callback);
 
   Socket() = delete;
   Socket(const Socket&) = delete;
@@ -38,7 +39,7 @@ class Socket {
   // mutate this or any other socket in any way.
   virtual void onFramePopped() {}
 
-  bool hasCapacity();
+  bool hasCapacity(std::size_t capacity) const;
 
   bool hasQueuedFrames();
 

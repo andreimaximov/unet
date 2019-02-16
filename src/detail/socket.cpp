@@ -6,9 +6,9 @@ namespace unet {
 namespace detail {
 
 Socket::Socket(SocketSet& socketSet, std::size_t sendQueueLen,
-               Callback callback)
+               Queue::Policy sendQueuePolicy, Callback callback)
     : socketSet_{socketSet},
-      sendQueue_{sendQueueLen},
+      sendQueue_{sendQueueLen, sendQueuePolicy},
       callback_{new Callback{callback}},
       ownerHook_{this},
       callbackHook_{this},
@@ -17,8 +17,8 @@ Socket::Socket(SocketSet& socketSet, std::size_t sendQueueLen,
   socketSet_.sockets_.push_back(ownerHook_);
 }
 
-bool Socket::hasCapacity() {
-  return sendQueue_.hasCapacity();
+bool Socket::hasCapacity(std::size_t capacity) const {
+  return sendQueue_.hasCapacity(capacity);
 }
 
 bool Socket::hasQueuedFrames() {

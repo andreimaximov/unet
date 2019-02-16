@@ -14,8 +14,17 @@ namespace detail {
 // A FIFO queue of frames. All operations are allocation free.
 class Queue : public NonMovable {
  public:
-  // Creates a queue that can store up to capacity frames.
-  Queue(std::size_t capacity);
+  // A policy which determines how much capacity a frame uses.
+  enum class Policy {
+    One,
+    DataLen,
+    NetLen,
+    TransportLen,
+  };
+
+  // Creates a queue that can store up to capacity frames. The policy determines
+  // how much capacity a frame uses.
+  Queue(std::size_t capacity, Policy policy = Policy::One);
 
   ~Queue();
 
@@ -30,11 +39,16 @@ class Queue : public NonMovable {
   // its capacity limit.
   void push(std::unique_ptr<Frame>& f);
 
-  // Return true if the queue has space for more frames and false otherwise.
-  bool hasCapacity() const;
+  // Return true if the queue has space for more frames (up to the specified
+  // capacity) and false otherwise.
+  bool hasCapacity(std::size_t capacity = 1) const;
+
+  // Return true if the queue has space for f and false otherwise.
+  bool hasCapacity(const Frame& f) const;
 
  private:
   std::size_t capacity_;
+  Policy policy_;
   std::unique_ptr<Frame> head_;
   Frame* tail_ = nullptr;
 };

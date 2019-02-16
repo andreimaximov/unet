@@ -12,11 +12,11 @@ struct Options {
   std::size_t stackSendQueueLen = 16'384;
 
   // The maximum number of frames waiting for an ARP reply that can be queued.
-  std::size_t arpQueueLen = 1024;
+  std::size_t arpQueueLen = 1'024;
 
   // The maximum number of ARP entries to cache before evicting according to an
   // LRU policy.
-  std::size_t arpCacheSize = 1024;
+  std::size_t arpCacheSize = 1'024;
 
   // The maximum time a frame waiting for an ARP reply is queued before being
   // dropped.
@@ -25,11 +25,11 @@ struct Options {
   // The maximum time an ARP entry is kept in cache before expiring.
   std::chrono::seconds arpCacheTTL = std::chrono::seconds{60};
 
-  // The maximum number of frames a raw socket can queue on the send path.
-  std::size_t rawSocketSendQueueLen = 1024;
+  // The maximum number of bytes a raw socket can queue on the send path.
+  std::size_t rawSocketSendQueueLen = 32'768;
 
-  // The maximum number of frames a raw socket can queue on the read path.
-  std::size_t rawSocketReadQueueLen = 1024;
+  // The maximum number of bytes a raw socket can queue on the read path.
+  std::size_t rawSocketReadQueueLen = 32'768;
 };
 
 }  // namespace unet

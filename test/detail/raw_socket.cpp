@@ -22,8 +22,8 @@ class RawSocketTest : public Test {
   void SetUp() override {
     socket =
         new RawSocket{RawSocket::kEthernet,
-                      2,
-                      2,
+                      1500,
+                      1500,
                       1500,
                       std::make_shared<Serializer>(EthernetAddr{}, Ipv4Addr{}),
                       sockets,
@@ -55,25 +55,26 @@ class RawSocketTest : public Test {
 TEST_F(RawSocketTest, SendCallback) {
   {
     InSequence s;
-    EXPECT_CALL(cb, Call(eventAsInt(Event::Send))).Times(3);
+    EXPECT_CALL(cb, Call(eventAsInt(Event::Send))).Times(2);
   }
 
   ss.dispatch();
 
-  ASSERT_NO_FATAL_FAILURE(SendMessage());
-  ASSERT_NO_FATAL_FAILURE(SendMessage());
+  // Exhaust the send queue...
+  std::size_t messages = 1500 / kMessage.size();
+  for (std::size_t m = 0; m < messages; m++) {
+    ASSERT_NO_FATAL_FAILURE(SendMessage());
+  }
 
   ss.dispatch();
 
-  auto f1 = socket->popFrame();
-  ASSERT_TRUE(f1);
-  ASSERT_EQ(*f1, kMessage);
+  for (std::size_t m = 0; m < messages; m++) {
+    auto f = socket->popFrame();
+    ASSERT_TRUE(f);
+    ASSERT_EQ(*f, kMessage);
+  }
 
-  ss.dispatch();
-
-  auto f2 = socket->popFrame();
-  ASSERT_TRUE(f2);
-  ASSERT_EQ(*f2, kMessage);
+  ASSERT_FALSE(socket->popFrame());
 
   ss.dispatch();
 }

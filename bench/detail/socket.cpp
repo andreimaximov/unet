@@ -12,7 +12,7 @@ static void benchSocketSetDispatch(benchmark::State& state) {
   SocketSet ss;
 
   for (int i = 0; i < kNumSockets; i++) {
-    auto s = new Socket{ss, 1, [](auto) {}};
+    auto s = new Socket{ss, 1, Queue::Policy::One, [](auto) {}};
     s->subscribedEventMaskAdd(1);
     s->pendingEventMaskAdd(1);
   }
@@ -30,7 +30,7 @@ static void benchSocketSetDrainRoundRobin(benchmark::State& state) {
     auto q = std::make_unique<Queue>(kNumSockets);
 
     for (int i = 0; i < kNumSockets; i++) {
-      auto s = new Socket{ss, 1, [](auto) {}};
+      auto s = new Socket{ss, 1, Queue::Policy::One, [](auto) {}};
       auto f = Frame::makeStr("What a beautiful frame...");
       s->sendFrame(f);
     }

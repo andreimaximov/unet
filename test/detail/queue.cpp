@@ -97,5 +97,37 @@ TEST(QueueTest, DestroyHuge) {
   }
 }
 
+TEST(QueueTest, NonDefaultPolicy) {
+  auto f1 = Frame::makeStr("a");
+  auto f2 = Frame::makeStr("ab");
+  auto f3 = Frame::makeStr("abc");
+  auto p1 = f1.get();
+  auto p2 = f2.get();
+  auto p3 = f3.get();
+
+  Queue q{4, Queue::Policy::DataLen};
+
+  q.push(f1);
+  ASSERT_FALSE(f1);
+
+  q.push(f2);
+  ASSERT_FALSE(f2);
+
+  q.push(f3);
+  ASSERT_TRUE(f3);
+
+  auto f4 = q.pop();
+  ASSERT_EQ(f4.get(), p1);
+
+  auto f5 = q.pop();
+  ASSERT_EQ(f5.get(), p2);
+
+  q.push(f3);
+  ASSERT_FALSE(f3);
+
+  auto f6 = q.pop();
+  ASSERT_EQ(f6.get(), p3);
+}
+
 }  // namespace detail
 }  // namespace unet

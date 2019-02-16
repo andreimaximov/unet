@@ -22,7 +22,7 @@ using MockCallback = StrictMock<MockFunction<void(std::uint32_t)>>;
 class MockSocket : public Socket {
  public:
   MockSocket(SocketSet& socketSet, Callback callback)
-      : Socket{socketSet, 1024, callback} {}
+      : Socket{socketSet, 1024, Queue::Policy::One, callback} {}
 
   MOCK_METHOD0(onFramePopped, void());
 };

@@ -10,30 +10,40 @@
 namespace unet {
 namespace detail {
 
+static auto socketTypePolicy(std::uint32_t socketType) {
+  return (socketType == RawSocket::kEthernet) ? Queue::Policy::DataLen
+                                              : Queue::Policy::NetLen;
+}
+
 RawSocket::RawSocket(std::uint32_t socketType, std::size_t sendQueueLen,
                      std::size_t readQueueLen, std::size_t maxTransmissionUnit,
                      std::shared_ptr<Serializer> serializer,
                      List<RawSocket>& sockets, SocketSet& socketSet,
                      Callback callback)
-    : Socket{socketSet, sendQueueLen, callback},
+    : Socket{socketSet, sendQueueLen, socketTypePolicy(socketType), callback},
       socketType_{socketType},
       socketsHook_{this},
-      readQueue_{readQueueLen},
-      maxTransmissionUnit_{maxTransmissionUnit},
+      readQueue_{readQueueLen, socketTypePolicy(socketType)},
+      sendLenMax_{0},
       serializer_{serializer} {
   if (socketType_ != kEthernet && socketType_ != kIpv4) {
     throw Exception{"Unknown socket type."};
   }
 
-  if ((socketType_ == kEthernet &&
-       maxTransmissionUnit_ < sizeof(EthernetHeader)) ||
-      (socketType_ == kIpv4 &&
-       maxTransmissionUnit_ < sizeof(EthernetHeader) + sizeof(Ipv4Header))) {
+  auto headersLen = (socketType_ == kEthernet)
+                        ? sizeof(EthernetHeader)
+                        : sizeof(EthernetHeader) + sizeof(Ipv4Header);
+
+  if (maxTransmissionUnit < headersLen) {
     throw Exception{"MTU is too small for the specified layer."};
+  } else if (socketType_ == kEthernet) {
+    sendLenMax_ = maxTransmissionUnit;
+  } else if (socketType_ == kIpv4) {
+    sendLenMax_ = maxTransmissionUnit - sizeof(EthernetHeader);
   }
 
   sockets.push_back(socketsHook_);
-  if (hasCapacity()) {
+  if (hasCapacity(1)) {
     pendingEventMaskAdd(eventAsInt(Event::Send));
   }
 }
@@ -41,14 +51,14 @@ RawSocket::RawSocket(std::uint32_t socketType, std::size_t sendQueueLen,
 void RawSocket::onFramePopped() {
   if (closed_ && !hasQueuedFrames()) {
     destroy();
-    return;
   } else if (!closed_) {
+    // Sent frames have non-zero length so we don't need to do a capacity check.
     pendingEventMaskAdd(eventAsInt(Event::Send));
   }
 }
 
 void RawSocket::process(const Frame& f) {
-  if (closed_ || !readQueue_.hasCapacity() ||
+  if (closed_ || !readQueue_.hasCapacity(f) ||
       (socketType_ == kIpv4 && !f.net)) {
     return;
   }
@@ -59,24 +69,27 @@ void RawSocket::process(const Frame& f) {
 }
 
 std::size_t RawSocket::send(const std::uint8_t* buf, std::size_t bufLen) {
-  if (!hasCapacity() ||
-      (socketType_ == kEthernet && bufLen < sizeof(EthernetHeader)) ||
-      (socketType_ == kIpv4 && bufLen < sizeof(Ipv4Header))) {
+  auto headerLen =
+      (socketType_ == kEthernet) ? sizeof(EthernetHeader) : sizeof(Ipv4Header);
+
+  if (bufLen < headerLen) {
+    return 0;
+  }
+
+  auto copyLen = std::min(sendLenMax_, bufLen);
+  if (copyLen == 0 || !hasCapacity(copyLen)) {
     return 0;
   }
 
   std::unique_ptr<Frame> f;
-  std::size_t copyLen = 0;
 
   switch (socketType_) {
     case kEthernet:
-      copyLen = std::min(maxTransmissionUnit_, bufLen);
       f = Frame::makeUninitialized(copyLen);
       std::copy(buf, buf + copyLen, f->data);
       break;
     case kIpv4:
-      copyLen = std::min(maxTransmissionUnit_ - sizeof(EthernetHeader), bufLen);
-      f = serializer_->make(copyLen, [buf, copyLen](detail::Frame& f) {
+      f = serializer_->make(copyLen, [buf, copyLen](Frame& f) {
         f.dataAs<EthernetHeader>()->ethType = eth_type::kIpv4;
         std::copy(buf, buf + copyLen, f.net);
         f.doIpv4Routing = true;
@@ -86,7 +99,7 @@ std::size_t RawSocket::send(const std::uint8_t* buf, std::size_t bufLen) {
 
   sendFrame(f);
 
-  if (!hasCapacity()) {
+  if (!hasCapacity(1)) {
     pendingEventMaskRemove(eventAsInt(Event::Send));
   }
 
@@ -114,10 +127,9 @@ std::size_t RawSocket::read(std::uint8_t* buf, std::size_t bufLen) {
 void RawSocket::close() {
   if (!hasQueuedFrames()) {
     destroy();
-    return;
   } else {
     // Wait for all egress frames (which we have confirmed to the user as
-    // "sent") to be drained before destroying the socket. We shold no longer
+    // "sent") to be drained before destroying the socket. We should no longer
     // invoke the callback for this socket.
     pendingEventMaskRemove(0xffff);
     socketsHook_.unlink();

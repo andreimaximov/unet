@@ -73,6 +73,7 @@ class Frame : public NonMovable {
   // TODO(amaximov): Benchmark and consider variable sized struct allocation.
   std::unique_ptr<Frame> next_;
   std::unique_ptr<std::uint8_t[]> buf_;
+  std::size_t capacity_;
 
   friend class Queue;
 };

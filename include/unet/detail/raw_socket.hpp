@@ -43,7 +43,7 @@ class RawSocket : public Socket {
   std::uint32_t socketType_;
   Hook<RawSocket> socketsHook_;
   Queue readQueue_;
-  std::size_t maxTransmissionUnit_;
+  std::size_t sendLenMax_;
   std::shared_ptr<Serializer> serializer_;
   bool closed_ = false;
 };
