@@ -12,7 +12,6 @@ namespace detail {
 using testing::InSequence;
 using testing::Invoke;
 using testing::MockFunction;
-using testing::NiceMock;
 using testing::StrictMock;
 using testing::Test;
 using testing::Throw;
@@ -30,9 +29,9 @@ class MockSocket : public Socket {
 class SocketTest : public Test {
  public:
   void SetUp() {
-    s1 = new NiceMock<MockSocket>{ss, cb1.AsStdFunction()};
-    s2 = new NiceMock<MockSocket>{ss, cb2.AsStdFunction()};
-    s3 = new NiceMock<MockSocket>{ss, cb3.AsStdFunction()};
+    s1 = new StrictMock<MockSocket>{ss, cb1.AsStdFunction()};
+    s2 = new StrictMock<MockSocket>{ss, cb2.AsStdFunction()};
+    s3 = new StrictMock<MockSocket>{ss, cb3.AsStdFunction()};
   }
 
   void ScheduleAll() {
@@ -67,9 +66,9 @@ class SocketTest : public Test {
   MockCallback cb1;
   MockCallback cb2;
   MockCallback cb3;
-  NiceMock<MockSocket>* s1 = nullptr;
-  NiceMock<MockSocket>* s2 = nullptr;
-  NiceMock<MockSocket>* s3 = nullptr;
+  StrictMock<MockSocket>* s1 = nullptr;
+  StrictMock<MockSocket>* s2 = nullptr;
+  StrictMock<MockSocket>* s3 = nullptr;
 };
 
 TEST_F(SocketTest, CallbackNoSubscriptionOrPending) {
@@ -297,7 +296,7 @@ TEST_F(SocketTest, OnFramePoppedDestroyPrevAndNextInline) {
   ASSERT_FALSE(q.peek());
 }
 
-TEST_F(SocketTest, OnFramedPoppedException) {
+TEST_F(SocketTest, OnFramePoppedException) {
   Queue q{4};
 
   PushFrame(*s1, "a");
@@ -308,6 +307,8 @@ TEST_F(SocketTest, OnFramedPoppedException) {
   {
     InSequence s;
     EXPECT_CALL(*s1, onFramePopped()).WillOnce(Throw(std::exception{}));
+    EXPECT_CALL(*s2, onFramePopped());
+    EXPECT_CALL(*s3, onFramePopped());
     EXPECT_CALL(*s1, onFramePopped());
   }
 
@@ -321,6 +322,11 @@ TEST_F(SocketTest, OnFramedPoppedException) {
   ASSERT_FALSE(q.peek());
 }
 
+TEST_F(SocketTest, OnFramePoppedEmpty) {
+  Queue q{1};
+  q.pop();
+}
+
 TEST_F(SocketTest, RoundRobinDrain) {
   Queue q{4};
   PushFrame(*s1, "a");
@@ -331,6 +337,18 @@ TEST_F(SocketTest, RoundRobinDrain) {
   PushFrame(*s3, "f");
   PushFrame(*s3, "g");
   PushFrame(*s3, "h");
+
+  {
+    InSequence s;
+    EXPECT_CALL(*s1, onFramePopped());
+    EXPECT_CALL(*s2, onFramePopped());
+    EXPECT_CALL(*s3, onFramePopped());
+    EXPECT_CALL(*s1, onFramePopped());
+    EXPECT_CALL(*s3, onFramePopped());
+    EXPECT_CALL(*s1, onFramePopped());
+    EXPECT_CALL(*s3, onFramePopped());
+    EXPECT_CALL(*s3, onFramePopped());
+  }
 
   ss.drainRoundRobin(q);
 

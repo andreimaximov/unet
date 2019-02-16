@@ -38,10 +38,14 @@ void Socket::sendFrame(std::unique_ptr<Frame>& f) {
 }
 
 std::unique_ptr<Frame> Socket::popFrame() {
+  auto f = sendQueue_.pop();
+  if (!f) {
+    return {};
+  }
+
   // We unlink and then conditionally schedule the socket at the end of the
   // dirty list to ensure round-robin scheduling in SocketSet.
   dirtyHook_.unlink();
-  auto f = sendQueue_.pop();
   if (sendQueue_.peek()) {
     socketSet_.dirty_.push_back(dirtyHook_);
   }
