@@ -18,7 +18,7 @@ class Serializer {
 
   template <typename F>
   auto make(std::size_t netLen, F&& callback) {
-    auto f = detail::Frame::makeZeros(sizeof(EthernetHeader) + netLen);
+    auto f = detail::Frame::makeUninitialized(sizeof(EthernetHeader) + netLen);
     f->dataAs<EthernetHeader>()->srcAddr = ethAddr_;
     f->net = f->data + sizeof(EthernetHeader);
     f->netLen = netLen;
@@ -37,7 +37,11 @@ class Serializer {
                   auto ipv4 = f.netAs<Ipv4Header>();
                   ipv4->ihl = 5;
                   ipv4->version = 4;
+                  ipv4->ecn = 0;
+                  ipv4->dscp = 0;
                   ipv4->len = hostToNet<std::uint16_t>(netLen);
+                  ipv4->id = 0;
+                  ipv4->flagsOffset = 0;
                   ipv4->ttl = 64;
                   ipv4->srcAddr = ipv4Addr_;
                   f.transport = f.net + sizeof(Ipv4Header);

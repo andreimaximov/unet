@@ -34,11 +34,12 @@ class Frame : public NonMovable {
   // Return a frame w/the specified data length. The data is NOT initialized.
   static std::unique_ptr<Frame> makeUninitialized(std::size_t dataLen);
 
-  // Return a frame w/the copied contents of frame f.
+  // Return a frame w/the copied contents of f.
   static std::unique_ptr<Frame> makeCopy(const Frame& f);
 
-  // Return a zerod frame w/the specified data length.
-  static std::unique_ptr<Frame> makeZeros(std::size_t dataLen);
+  // Return a frame w/the copied contents of buf.
+  static std::unique_ptr<Frame> makeBuf(const std::uint8_t* buf,
+                                        std::size_t bufLen);
 
   // Return a frame w/the specified data.
   static std::unique_ptr<Frame> makeStr(const std::string& s);

@@ -16,12 +16,6 @@ std::unique_ptr<Frame> Frame::makeUninitialized(std::size_t dataLen) {
   return std::unique_ptr<Frame>{new Frame{dataLen}};
 }
 
-std::unique_ptr<Frame> Frame::makeZeros(std::size_t dataLen) {
-  auto f = Frame::makeUninitialized(dataLen);
-  std::memset(f->data, 0, dataLen);
-  return f;
-}
-
 std::unique_ptr<Frame> Frame::makeCopy(const Frame& f) {
   auto copy = makeUninitialized(f.dataLen);
   std::memcpy(copy->data, f.data, f.dataLen);
@@ -38,10 +32,15 @@ std::unique_ptr<Frame> Frame::makeCopy(const Frame& f) {
   return copy;
 }
 
-std::unique_ptr<Frame> Frame::makeStr(const std::string& s) {
-  auto f = makeUninitialized(s.size());
-  std::memcpy(f->data, s.data(), s.size());
+std::unique_ptr<Frame> Frame::makeBuf(const std::uint8_t* buf,
+                                      std::size_t bufLen) {
+  auto f = makeUninitialized(bufLen);
+  std::memcpy(f->data, buf, bufLen);
   return f;
+}
+
+std::unique_ptr<Frame> Frame::makeStr(const std::string& s) {
+  return makeBuf(reinterpret_cast<const std::uint8_t*>(s.data()), s.size());
 }
 
 bool Frame::operator==(const std::string& data) const {

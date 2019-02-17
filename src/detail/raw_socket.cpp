@@ -85,8 +85,7 @@ std::size_t RawSocket::send(const std::uint8_t* buf, std::size_t bufLen) {
 
   switch (socketType_) {
     case kEthernet:
-      f = Frame::makeUninitialized(copyLen);
-      std::copy(buf, buf + copyLen, f->data);
+      f = Frame::makeBuf(buf, copyLen);
       break;
     case kIpv4:
       f = serializer_->make(copyLen, [buf, copyLen](Frame& f) {
