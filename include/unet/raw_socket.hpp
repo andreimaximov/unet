@@ -4,9 +4,8 @@
 #include <cstdint>
 #include <functional>
 
-#include <unet/detail/nonmovable.hpp>
 #include <unet/detail/raw_socket.hpp>
-#include <unet/event.hpp>
+#include <unet/socket_base.hpp>
 #include <unet/stack.hpp>
 
 namespace unet {
@@ -14,9 +13,11 @@ namespace unet {
 // A socket for communicating via Ethernet or IPv4 frames. The following events
 // are supported:
 //
-// - Send
-// - Read
-class RawSocket : public detail::NonMovable {
+// - Send: Indicates send(...) can send a frame. send(...) can still fail if the
+//         frame you are sending is too big and the socket does not have
+//         sufficient capacity.
+// - Read: Indicates read(...) can return data for a received frame.
+class RawSocket : public SocketBase<detail::RawSocket> {
  public:
   // The type of raw socket which determines the layer of sent and received
   // frames.
@@ -28,15 +29,11 @@ class RawSocket : public detail::NonMovable {
   static constexpr auto kEthernet = Type::Ethernet;
   static constexpr auto kIpv4 = Type::Ipv4;
 
-  RawSocket() = delete;
-
   // Creates a raw socket bound to the provided stack. The socket MUST NOT
   // exceed the lifetime of the stack. The callback is invoked once a
   // subscribed event becomes pending.
   RawSocket(Stack& stack, Type type,
             std::function<void(RawSocket&, std::uint32_t)> callback);
-
-  ~RawSocket();
 
   // Sends a frame represented by buf.
   //
@@ -52,15 +49,6 @@ class RawSocket : public detail::NonMovable {
   //
   // Return the number of bytes read into buf.
   std::size_t read(std::uint8_t* buf, std::size_t bufLen);
-
-  // Schedules the socket callback to run once an event becomes pending.
-  void subscribe(Event event);
-
-  // Deschedules the socket callback from running when an event becomes pending.
-  void unsubscribe(Event event);
-
- private:
-  detail::RawSocket* socket_ = nullptr;
 };
 
 }  // namespace unet
