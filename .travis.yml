@@ -6,8 +6,6 @@ dist:
 compiler:
   - gcc
   - clang
-branches:
-  only: ["master"]
 install:
   - cd ${TRAVIS_BUILD_DIR}
   - ./scripts/install-deps.sh
