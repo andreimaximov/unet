@@ -41,6 +41,7 @@ class Ipv4AddrCidr {
 };
 
 struct UNET_PACK Ipv4Header {
+  struct MemcmpTag {};
 // Careful with order of members on compilers for targets w/different endianess.
 #ifdef BOOST_ENDIAN_LITTLE_BYTE
   std::uint8_t ihl : 4;
@@ -53,7 +54,7 @@ struct UNET_PACK Ipv4Header {
   std::uint8_t dscp : 6;
   std::uint8_t ecn : 2;
 #else
-  #error "Unknown endianess!"
+#error "Unknown endianess!"
 #endif
   std::uint16_t len;
   std::uint16_t id;
@@ -77,3 +78,6 @@ static const std::uint8_t kIcmp = 1;
 }  // namespace ipv4_proto
 
 }  // namespace unet
+
+UNET_STD_HASH_AS_MEM_HASH(unet::Ipv4Addr)
+UNET_STD_HASH_AS_MEM_HASH(unet::Ipv4Header)

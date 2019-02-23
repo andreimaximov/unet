@@ -34,3 +34,6 @@ static const std::uint16_t kArp = hostToNet<std::uint16_t>(0x0806);
 }  // namespace eth_type
 
 }  // namespace unet
+
+UNET_STD_HASH_AS_MEM_HASH(unet::EthernetAddr)
+UNET_STD_HASH_AS_MEM_HASH(unet::EthernetHeader)

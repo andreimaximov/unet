@@ -39,7 +39,7 @@ class ArpCache {
 
   void gc(std::chrono::steady_clock::time_point now);
 
-  std::unordered_map<Ipv4Addr, Item, Memhash<Ipv4Addr>> cache_;
+  std::unordered_map<Ipv4Addr, Item> cache_;
   std::size_t capacity_;
   std::chrono::seconds ttl_;
   std::function<std::chrono::steady_clock::time_point()> now_;

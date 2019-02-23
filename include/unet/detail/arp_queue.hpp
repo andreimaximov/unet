@@ -51,8 +51,7 @@ class ArpQueue : private NonMovable {
   ArpCache cache_;
   std::shared_ptr<Queue> sendQueue_;
   std::shared_ptr<TimerManager> timerManager_;
-  std::unordered_map<Ipv4Addr, std::unique_ptr<Timer>, Memhash<Ipv4Addr>>
-      timers_;
+  std::unordered_map<Ipv4Addr, std::unique_ptr<Timer>> timers_;
 };
 
 }  // namespace detail

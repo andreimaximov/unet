@@ -14,6 +14,17 @@ namespace unet {
 #define UNET_ASSERT_SIZE(type, size) \
   static_assert(sizeof(type) == size, "Type has an unexpected size!")
 
+#define UNET_STD_HASH_AS_MEM_HASH(type)           \
+  namespace std {                                 \
+  template <>                                     \
+  struct hash<type> {                             \
+    std::size_t operator()(const type& x) const { \
+      unet::Memhash<type> h;                      \
+      return h(x);                                \
+    }                                             \
+  };                                              \
+  }
+
 // Performs a host to network byte order conversion on x.
 //
 // Return x in network byte order
